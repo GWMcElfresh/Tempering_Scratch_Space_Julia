@@ -1,0 +1,71 @@
+name: CI – Build, Test, and Docker
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  # ── Reusable Docker dependency caching ──────────────────────────────────────
+  docker:
+    name: Docker (dependency cache)
+    permissions:
+      contents: read
+      packages: write
+    uses: GWMcElfresh/dockerDependencies/.github/workflows/docker-cache.yml@main
+    with:
+      dockerfile-path: .
+      context: .
+      runtime-image-name: efdm-tempering:test
+      test-command: >
+        julia --project=/app -e "
+        using EFDMTempering;
+        println(\"EFDMTempering loaded OK\");
+        println(\"Bundled models: \", keys(BUNDLED_MODELS));
+        "
+      # Include Project.toml in the dependency hash so the cache is
+      # invalidated whenever the package manifest changes
+      dependency-files: "Project.toml"
+      # Rebuild the base dependency image monthly
+      time-bucket-format: "%Y-%m"
+      push-images: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
+      push-runtime: false
+
+  # ── Pure Julia unit tests (fast, no Docker) ──────────────────────────────────
+  julia-tests:
+    name: Julia ${{ matrix.julia-version }} – Unit tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        julia-version: ["1.9", "1.10"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Julia ${{ matrix.julia-version }}
+        uses: julia-actions/setup-julia@v2
+        with:
+          version: ${{ matrix.julia-version }}
+
+      - name: Cache Julia packages
+        uses: julia-actions/cache@v2
+
+      - name: Install dependencies
+        run: |
+          julia --project=. -e "
+          import Pkg
+          Pkg.instantiate()
+          "
+
+      - name: Run tests
+        run: |
+          julia --project=. -e "
+          import Pkg
+          Pkg.test()
+          "

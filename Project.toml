@@ -1,0 +1,27 @@
+name = "EFDMTempering"
+uuid = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+version = "0.1.0"
+authors = ["GWMcElfresh"]
+
+[deps]
+BridgeStan = "c88b6f0a-829e-4b0b-94b7-f06ab5908f5a"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+MCMCChains = "c7f686f2-ff18-58e9-bc7b-31028e88f75d"
+Pigeons = "0eb8d820-af6a-4919-95ae-11206f830c31"
+
+[compat]
+BridgeStan = "2"
+CSV = "0.10"
+DataFrames = "1"
+JSON = "0.21"
+MCMCChains = "6"
+Pigeons = "0.4"
+julia = "1.9"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
