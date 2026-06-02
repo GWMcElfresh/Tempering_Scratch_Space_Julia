@@ -36,8 +36,8 @@ struct EFDMLogPotential
     beta_sd::Float64
     aplus_log_mean::Float64
     aplus_log_sd::Float64
-    p_alr_sd::Float64
-    w_logit_sd::Float64
+    p_alr_sd::Vector{Float64}
+    w_logit_sd::Vector{Float64}
 end
 
 """
@@ -47,21 +47,20 @@ end
 
 Construct an EFDMLogPotential from count matrix Y and design matrix X.
 
-Recommended defaults (from lessons_learned.txt):
-  - beta_sd = 1.0 (≤ 1.0 to avoid excessive prior-posterior gaps)
-  - aplus_log_mean = 3.5  (prior belief: a≈33, typical for PBMC)
-  - aplus_log_sd = 1.0    (moderately informative)
-  - p_alr_sd = 2.0        (weakly informative on simplex)
-  - w_logit_sd = 2.0      (weakly informative on (0,1) scale)
+`p_alr_sd` and `w_logit_sd` can be scalars (same SD for all categories)
+or vectors of length D-1 / D respectively for per-category regularization.
 """
 function EFDMLogPotential(Y::Matrix{Float64}, X::Matrix{Float64},
                           D::Int, K::Int, beta_sd::Float64;
                           aplus_log_mean::Float64=3.5, aplus_log_sd::Float64=1.0,
-                          p_alr_sd::Float64=2.0, w_logit_sd::Float64=2.0)
+                          p_alr_sd::Union{Real, AbstractVector}=2.0,
+                          w_logit_sd::Union{Real, AbstractVector}=2.0)
     n_obs = vec(sum(Y; dims=2))
+    p_sd = p_alr_sd isa AbstractVector ? Float64.(p_alr_sd) : fill(Float64(p_alr_sd), D - 1)
+    w_sd = w_logit_sd isa AbstractVector ? Float64.(w_logit_sd) : fill(Float64(w_logit_sd), D)
     return EFDMLogPotential(Y, X, n_obs, D, K,
                             beta_sd, aplus_log_mean, aplus_log_sd,
-                            p_alr_sd, w_logit_sd)
+                            p_sd, w_sd)
 end
 
 function (lp::EFDMLogPotential)(θ::AbstractVector)
@@ -120,16 +119,19 @@ struct EFDMReference
     beta_sd::Float64
     aplus_log_mean::Float64
     aplus_log_sd::Float64
-    p_alr_sd::Float64
-    w_logit_sd::Float64
+    p_alr_sd::Vector{Float64}
+    w_logit_sd::Vector{Float64}
 end
 
 function EFDMReference(D::Int, K::Int, beta_sd::Float64;
                        aplus_log_mean::Float64=3.5, aplus_log_sd::Float64=1.0,
-                       p_alr_sd::Float64=2.0, w_logit_sd::Float64=2.0)
+                       p_alr_sd::Union{Real, AbstractVector}=2.0,
+                       w_logit_sd::Union{Real, AbstractVector}=2.0)
+    p_sd = p_alr_sd isa AbstractVector ? Float64.(p_alr_sd) : fill(Float64(p_alr_sd), D - 1)
+    w_sd = w_logit_sd isa AbstractVector ? Float64.(w_logit_sd) : fill(Float64(w_logit_sd), D)
     return EFDMReference(D, K, beta_sd,
                          aplus_log_mean, aplus_log_sd,
-                         p_alr_sd, w_logit_sd)
+                         p_sd, w_sd)
 end
 
 (ref::EFDMReference)(θ::AbstractVector) =

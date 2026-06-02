@@ -81,8 +81,7 @@ function plot_aplus_posterior(pt, D::Int, K::Int;
                     text=@sprintf("mean=%.1f<br>median=%.1f<br>95%%CI=[%.1f, %.1f]",
                                   aplus_mean, aplus_median, aplus_ci[1], aplus_ci[2]),
                     showarrow=false, font_size=12,
-                    bgcolor="rgba(255,255,255,0.8)"
-                )
+                    bgcolor="rgba(255,255,255,0.8)")
             ]
         )
         fig = PlotlyJS.plot(hist, layout)
@@ -120,8 +119,6 @@ function plot_conditional_effects(pt, D::Int, K::Int,
     tci = extract_target_chain_indices(pt)
 
     n_params = size(samples, 2)
-    n_iter = size(samples, 1)
-    n_cold = length(tci)
 
     # Posterior mean of θ (across all cold chain draws)
     θ_mean = zeros(n_params)
@@ -176,55 +173,26 @@ function plot_conditional_effects(pt, D::Int, K::Int,
     @info "Wrote conditional effects data: $csv_path"
 
     if _HAS_PLOTLY
-        traces = []
-        for d in 1:D
-            for cov_name in unique(df.covariate)
+        unique_covs = unique(df.covariate)
+        for cov_name in unique_covs
+            cov_traces = []
+            for d in 1:D
                 subset_df = df[(df.cell_type .== "CT$(d-1)") .& (df.covariate .== cov_name), :]
                 if nrow(subset_df) > 0
                     tr = PlotlyJS.scatter(;
                         x=subset_df.x, y=subset_df.expected_proportion,
-                        mode="lines",
-                        name="CT$(d-1)",
-                        line=PlotlyJS.attr(width=2)
+                        mode="lines", name="CT$(d-1)"
                     )
-                    push!(traces, tr)
+                    push!(cov_traces, tr)
                 end
             end
-        end
-
-        unique_covs = unique(df.covariate)
-        if length(unique_covs) == 1
             layout = PlotlyJS.Layout(;
-                title="Expected proportions (posterior mean β)",
-                xaxis_title=unique_covs[1],
-                yaxis_title="Expected proportion",
-                legend_title="Cell type"
+                title="Effect of $cov_name on proportions",
+                xaxis_title=cov_name,
+                yaxis_title="Expected proportion"
             )
-            fig = PlotlyJS.plot(traces, layout)
-            _maybe_plotly(fig, joinpath(output_dir, filename))
-        else
-            # One subplot per covariate
-            for cov_name in unique_covs
-                cov_traces = [tr for tr in traces if occursin(cov_name, string(tr["name"]))]
-                cov_traces = []
-                for d in 1:D
-                    subset_df = df[(df.cell_type .== "CT$(d-1)") .& (df.covariate .== cov_name), :]
-                    if nrow(subset_df) > 0
-                        tr = PlotlyJS.scatter(;
-                            x=subset_df.x, y=subset_df.expected_proportion,
-                            mode="lines", name="CT$(d-1)"
-                        )
-                        push!(cov_traces, tr)
-                    end
-                end
-                layout = PlotlyJS.Layout(;
-                    title="Effect of $cov_name on proportions",
-                    xaxis_title=cov_name,
-                    yaxis_title="Expected proportion"
-                )
-                fig = PlotlyJS.plot(cov_traces, layout)
-                _maybe_plotly(fig, joinpath(output_dir, "effect_$(cov_name).html"))
-            end
+            fig = PlotlyJS.plot(cov_traces, layout)
+            _maybe_plotly(fig, joinpath(output_dir, "effect_$(cov_name).html"))
         end
     end
 
@@ -401,4 +369,206 @@ function plot_all_diagnostics(pt, D::Int, K::Int,
     plot_traces(pt, key_params, key_names; output_dir=output_dir)
 
     return summary
+end
+
+# =============================================================================
+# Covariance and Shrinkage Plots (added in auto-tune PR)
+# =============================================================================
+
+"""
+    plot_covariance_heatmap(cov_matrix, labels; output_dir=".", filename="covariance_heatmap.html",
+                           title="Posterior Covariance")
+
+Plot a covariance matrix as a heatmap using PlotlyJS.
+If PlotlyJS is unavailable, saves the matrix as CSV.
+
+The heatmap uses a diverging color scale centered at 0, with rows/columns
+reordered by the leading eigenvector for a cleaner visual grouping.
+
+Returns: DataFrame of the covariance matrix.
+"""
+function plot_covariance_heatmap(cov_matrix::Matrix{Float64},
+                                  labels::AbstractVector{<:AbstractString};
+                                  output_dir::String=".",
+                                  filename::String="covariance_heatmap.html",
+                                  title::String="Posterior Covariance")
+    D_sq = size(cov_matrix, 1)
+    @assert length(labels) == D_sq "Labels length must match matrix dimension"
+
+    # Write CSV
+    df = DataFrame(cov_matrix, Symbol.(labels))
+    insertcols!(df, 1, :category => labels)
+    csv_path = joinpath(output_dir, splitext(filename)[1] * "_data.csv")
+    CSV.write(csv_path, df)
+    @info "Wrote covariance data: $csv_path"
+
+    if _HAS_PLOTLY
+        # Reorder by first PC loading for a cleaner visual
+        order = try
+            vecs = eigvecs(Symmetric(cov_matrix))
+            sortperm(vecs[:, end])
+        catch
+            collect(1:D_sq)
+        end
+
+        sorted_labels = labels[order]
+        sorted_cov = cov_matrix[order, order]
+
+        max_abs = maximum(abs.(sorted_cov))
+        heat = PlotlyJS.heatmap(;
+            z=sorted_cov,
+            x=sorted_labels,
+            y=sorted_labels,
+            colorscale="RdBu",
+            zmid=0.0,
+            zmin=-max_abs,
+            zmax=max_abs,
+            text=round.(sorted_cov, digits=3),
+            texttemplate="%{text}",
+            textfont_size=9,
+        )
+        layout = PlotlyJS.Layout(;
+            title=title,
+            xaxis=PlotlyJS.attr(tickangle=45, side="top"),
+            yaxis=PlotlyJS.attr(tickangle=0),
+            width=800, height=700,
+            margin=PlotlyJS.attr(l=100, r=50, t=80, b=100),
+        )
+        fig = PlotlyJS.plot(heat, layout)
+        _maybe_plotly(fig, joinpath(output_dir, filename))
+    end
+
+    return df
+end
+
+"""
+    plot_shrinkage_barchart(shr; D, K, output_dir=".", filename="shrinkage.html")
+
+Bar chart of shrinkage factors for each parameter block.
+- shrinkage = 1 - posterior_var / prior_var
+- shrinkage → 1: data dominates, → 0: prior dominates
+
+Categories where shrinkage < 0.3 (prior dominates) are highlighted in red.
+Categories where shrinkage > 0.99 (data dominates) are highlighted in purple.
+"""
+function plot_shrinkage_barchart(shr; D::Int, K::Int,
+                                  output_dir::String=".",
+                                  filename::String="shrinkage.html")
+    rows = []
+    for j in 1:D
+        push!(rows, (parameter="w[$j]", block="w", index=j, shrinkage=shr.w_logit[j]))
+    end
+    for j in 1:(D - 1)
+        push!(rows, (parameter="ALR(p[$j])", block="p", index=j, shrinkage=shr.p_alr[j]))
+    end
+    push!(rows, (parameter="log(aplus)", block="aplus", index=0, shrinkage=shr.aplus))
+    if length(shr.beta) > 0
+        push!(rows, (parameter="β (mean)", block="beta", index=0, shrinkage=mean(shr.beta)))
+        push!(rows, (parameter="β (min)", block="beta", index=0, shrinkage=minimum(shr.beta)))
+        push!(rows, (parameter="β (max)", block="beta", index=0, shrinkage=maximum(shr.beta)))
+    end
+
+    df = DataFrame(rows)
+    csv_path = joinpath(output_dir, "shrinkage_data.csv")
+    CSV.write(csv_path, df)
+    @info "Wrote shrinkage data: $csv_path"
+
+    if _HAS_PLOTLY
+        w_df = df[df.block .== "w", :]
+        p_df = df[df.block .== "p", :]
+        other_df = df[df.block .== "aplus" .| df.block .== "beta", :]
+
+        traces = PlotlyJS.GenericTrace[]
+
+        if nrow(w_df) > 0
+            w_colors = [v < 0.3 ? "crimson" : (v > 0.99 ? "purple" : "steelblue") for v in w_df.shrinkage]
+            push!(traces, PlotlyJS.bar(; x=w_df.parameter, y=w_df.shrinkage,
+                                         name="w (component weights)",
+                                         marker_color=w_colors))
+        end
+        if nrow(p_df) > 0
+            p_colors = [v < 0.3 ? "crimson" : (v > 0.99 ? "purple" : "forestgreen") for v in p_df.shrinkage]
+            push!(traces, PlotlyJS.bar(; x=p_df.parameter, y=p_df.shrinkage,
+                                         name="ALR(p) (baseline weights)",
+                                         marker_color=p_colors))
+        end
+        if nrow(other_df) > 0
+            push!(traces, PlotlyJS.bar(; x=other_df.parameter, y=other_df.shrinkage,
+                                         name="Other", marker_color="gray"))
+        end
+
+        layout = PlotlyJS.Layout(;
+            title="Regularization: Shrinkage by Parameter",
+            xaxis_title="Parameter",
+            yaxis_title="Shrinkage (1 - post_var / prior_var)",
+            yaxis=PlotlyJS.attr(range=[0, 1.05]),
+            barmode="group",
+            shapes=[
+                PlotlyJS.shape(; type="line", x0=-0.5, y0=0.3,
+                    x1=length(df.parameter) - 0.5, y1=0.3,
+                    line=PlotlyJS.attr(color="red", width=1, dash="dot"), yref="y"),
+                PlotlyJS.shape(; type="line", x0=-0.5, y0=0.99,
+                    x1=length(df.parameter) - 0.5, y1=0.99,
+                    line=PlotlyJS.attr(color="purple", width=1, dash="dot"), yref="y"),
+            ],
+        )
+        fig = PlotlyJS.plot(traces, layout)
+        _maybe_plotly(fig, joinpath(output_dir, filename))
+    end
+
+    return df
+end
+
+"""
+    plot_all_covariances(pt, D, K, X, covariate_names;
+                         output_dir="efdm_output")
+
+Compute and plot all three posterior covariance matrices:
+
+  1. logit(w) — D×D covariance of component weights on logit scale
+  2. ALR(p)   — (D-1)×(D-1) covariance of baseline mixture weights
+  3. mu       — D×D covariance of expected proportions at covariate means
+     + mu correlation matrix (easier to interpret than covariance)
+
+Automatically called by the runner if --covariances flag is passed.
+"""
+function plot_all_covariances(pt, D::Int, K::Int,
+                               X::Matrix{Float64},
+                               covariate_names::AbstractVector{<:AbstractString};
+                               output_dir::String="efdm_output")
+    samples = sample_array(pt)
+    tci = extract_target_chain_indices(pt)
+
+    # 1. logit(w) covariance
+    Σ_w, w_labels = posterior_logit_w_covariance(samples, D, K, tci)
+    plot_covariance_heatmap(Σ_w, w_labels;
+        output_dir=output_dir, filename="covariance_logit_w.html",
+        title="Posterior Covariance: logit(w) — Component Weights")
+
+    # 2. ALR(p) covariance
+    if D > 1
+        Σ_p, p_labels = posterior_alr_p_covariance(samples, D, K, tci)
+        plot_covariance_heatmap(Σ_p, p_labels;
+            output_dir=output_dir, filename="covariance_alr_p.html",
+            title="Posterior Covariance: ALR(p) — Baseline Mixture Weights")
+    end
+
+    # 3. Expected proportion covariance (conditional at covariate means)
+    if size(X, 1) > 0
+        Σ_mu, mu_labels = posterior_mu_covariance_cond(samples, X, D, K, tci;
+                                                       cond_on="mean")
+        plot_covariance_heatmap(Σ_mu, mu_labels;
+            output_dir=output_dir, filename="covariance_mu.html",
+            title="Posterior Covariance: E[proportions] at covariate means")
+
+        # Correlation matrix (scale-free, easier to interpret)
+        D_mu = size(Σ_mu, 1)
+        corr_mu = zeros(D_mu, D_mu)
+        for i in 1:D_mu, j in 1:D_mu
+            corr_mu[i, j] = Σ_mu[i, j] / sqrt(Σ_mu[i, i] * Σ_mu[j, j])
+        end
+        plot_covariance_heatmap(corr_mu, mu_labels;
+            output_dir=output_dir, filename="correlation_mu.html",
+            title="Posterior Correlation: E[proportions] at covariate means")
+    end
 end

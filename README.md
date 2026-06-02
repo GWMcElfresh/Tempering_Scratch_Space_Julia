@@ -217,6 +217,13 @@ All files are written to the configured output directory (default: `efdm_output/
 | `rhat_data.csv` | Rhat values per parameter |
 | `trace_*.html` | Trace plots for key parameters |
 | `trace_data.csv` | All trace data in long format |
+| `shrinkage.html` | Shrinkage bar chart per parameter block |
+| `shrinkage_data.csv` | Shrinkage factors with block labels |
+| `covariance_logit_w.html` | Covariance heatmap of logit(w) — D×D |
+| `covariance_alr_p.html` | Covariance heatmap of ALR(p) — (D-1)×(D-1) |
+| `covariance_mu.html` | Covariance of expected proportions — D×D |
+| `correlation_mu.html` | Correlation of expected proportions — D×D |
+| `tuned_priors.csv` | Per-category prior SDs from auto-tune |
 
 ### Conditional effects plots
 
@@ -224,6 +231,130 @@ For each continuous covariate, the expected cell-type proportions at the
 posterior mean β are plotted across the covariate's range, holding all other
 covariates at their means. This shows how the composition shifts with each
 predictor.
+
+### Covariance heatmaps
+
+Three posterior covariance matrices are computed from the MCMC samples and
+visualized as diverging-color heatmaps with PC-ordered rows/columns:
+
+#### 1. logit(w) — Component weight covariance (D × D)
+
+The logit of the component weights `w_j` controls whether category `j`'s
+expected proportion is driven by the regression (`w_j → 0`) or by the baseline
+mixture weight (`w_j → 1`). The posterior covariance of `logit(w)` tells you
+which categories share similar mixing behavior:
+
+- **Strong positive covariance**: two categories tend to have similar
+  regression-vs-baseline balance across the posterior. If one's weight is
+  pulled toward regression, the other is too.
+- **Strong negative covariance**: the two categories trade off — if one is
+  regression-dominated, the other is baseline-dominated.
+- **Near-zero covariance**: the categories' weights move independently.
+
+A block-diagonal pattern suggests groups of categories with shared behavior.
+Off-diagonal structure suggests compositional trade-offs.
+
+#### 2. ALR(p) — Baseline proportion covariance ((D-1) × (D-1))
+
+The baseline mixture weights `p` are on the simplex via additive log-ratio
+(ALR) transform with category D as the reference. The ALR(p) posterior
+covariance captures substitution patterns in the baseline composition:
+
+- **Positive covariance**: the two baseline proportions tend to move together
+  relative to the reference.
+- **Negative covariance**: substitution — when one baseline proportion goes
+  up, the other goes down relative to the reference.
+
+This matrix is constrained to (D-1) dimensions because the simplex has one
+redundant degree of freedom. The reference category's "variance" is implicit
+in the sum-to-zero constraint.
+
+#### 3. μ — Expected proportion covariance (D × D, rank-deficient)
+
+The expected proportions `μ = softmax(Xβ)` live on the simplex. Their
+posterior covariance (computed from posterior draws of β at covariate means)
+directly shows the **compositional substitution pattern**:
+
+- **Diagonal**: uncertainty in each category's expected proportion.
+- **Off-diagonal**: substitution — positive means categories co-vary,
+  negative means they trade off (the most common pattern for compositions).
+
+Because the proportions sum to 1, this covariance matrix has rank D-1.
+The **correlation matrix** is also plotted (scale-free), making it easier to
+compare substitution strengths across categories. A large negative correlation
+between two cell types means "when one is higher than expected, the other is
+lower" — a classic composition effect.
+
+#### Interpreting the heatmaps
+
+Each heatmap annotates values and uses a RdBu color scale centered at zero:
+- **Blue**: positive covariance/correlation
+- **Red**: negative covariance/correlation
+- **White**: near zero
+
+The rows/columns are reordered by the leading eigenvector so that groups of
+categories with similar covariance structure cluster together automatically.
+
+## Per-Category Regularization
+
+The model supports **per-category prior SDs** for both `p` (baseline weights)
+and `w` (component weights), matching the structure of
+`robertoascari/EFDMReg`'s `EFDM_hyper_w.stan`.
+
+A scalar SD in the config applies uniformly to all categories. A vector of
+length D (for w) or D-1 (for p) applies different regularization per category:
+
+```toml
+[priors.w]
+sd = [1.5, 2.0, 2.5, 0.8, 1.2]  # one per category
+```
+
+This is useful when the data have strong information for some categories but
+not others. The auto-tune feature computes these vectors automatically.
+
+## Auto-Tune: Empirical Bayes Regularization
+
+The `[auto_tune]` config section enables an iterative empirical Bayes loop
+that learns appropriate per-category prior SDs from the posterior:
+
+```
+auto_tune.enabled = true
+auto_tune.n_iter = 3       # number of PT runs
+auto_tune.inflation = 1.5  # safety factor (higher = less informative prior)
+```
+
+### How it works
+
+1. **Round 1**: Run PT with uniform priors (default scalar SDs).
+2. **Extract**: compute posterior marginal SD of `logit(w[j])` for each category j.
+3. **Update**: set `new_w_sd[j] = posterior_SD[j] × inflation`. This
+   prevents overfitting — the inflation factor ensures the prior remains
+   weakly informative rather than collapsing to the posterior.
+4. **Repeat**: run PT with the updated per-category SDs, then update again.
+5. **Final**: run PT with the stabilized SDs.
+
+After 2-3 iterations, prior SDs typically stabilize. The result is that
+categories with strong signal get tight priors (more regularization) while
+poorly identified categories get loose priors (less regularization).
+
+The tuned SDs are saved to `tuned_priors.csv` and can be reused in future
+runs by copying them into the config file.
+
+### Shrinkage analysis
+
+After each run, a shrinkage report shows how much the posterior variance has
+shrunk relative to the prior:
+
+```
+  w[1]:  0.871  (data-dominated)
+  w[2]:  0.123  (prior-dominated — consider loosening)
+  w[3]:  0.654  (balanced)
+```
+
+Shrinkage = 1 - posterior_variance / prior_variance. Values near 1 mean the
+data is driving inference; values near 0 mean the prior is dominating. The
+auto-tune loop automatically adjusts prior SDs to bring shrinkage into a
+healthy range (typically 0.3–0.95).
 
 ## Programmatic API
 
@@ -262,6 +393,45 @@ println(convergence_report_str(summary))
 samples = sample_array(pt)
 tci = extract_target_chain_indices(pt)
 aplus_draws = extract_parameter_draws(samples, (3-1)*2+1, tci)
+```
+
+### Covariance analysis
+
+```julia
+# All three covariance/heatmaps
+plot_all_covariances(pt, D, K, X, covariate_names; output_dir="efdm_output")
+
+# Or individually:
+Σ_w, labels = posterior_logit_w_covariance(samples, D, K, tci)
+Σ_p, labels_p = posterior_alr_p_covariance(samples, D, K, tci)
+Σ_mu, labels_mu = posterior_mu_covariance_cond(samples, X, D, K, tci; cond_on="mean")
+```
+
+### Shrinkage and regularization
+
+```julia
+shr = shrinkage_report(pt, D, K, beta_sd, aplus_log_sd, p_alr_sd, w_logit_sd)
+println(shrinkage_report_str(shr; D=D, K=K))
+plot_shrinkage_barchart(shr; D=D, K=K, output_dir="efdm_output")
+```
+
+### Auto-tune loop
+
+```julia
+# Define closures that rebuild target/reference with given prior SDs
+target_fn = (; p_alr_sd, w_logit_sd) -> begin
+    t = EFDMLogPotential(Y, X, D, K, 1.0;
+                         p_alr_sd=p_alr_sd, w_logit_sd=w_logit_sd)
+    r = EFDMReference(D, K, 1.0;
+                      p_alr_sd=p_alr_sd, w_logit_sd=w_logit_sd)
+    return t, r
+end
+
+pt, p_sd, w_sd, history = run_auto_tune(
+    target_fn, (args...) -> target_fn(; args...)[2],
+    (n_chains=30, n_rounds=8, explorer=SliceSampler()),
+    D=D, K=K, n_iter=3, inflation=1.5
+)
 ```
 
 ## Acknowledgements
