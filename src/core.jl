@@ -49,10 +49,14 @@ end
 
 Joint log-prior density for the unconstrained parameter vector θ.
 Each block has an independent Normal(0, sd²) prior in unconstrained space.
+
+`p_alr_sd` and `w_logit_sd` can be either scalars (same SD for all elements)
+or vectors (per-element SDs for category-specific regularization).
 """
 function efdm_logprior(θ::AbstractVector, D::Int, K::Int,
                        beta_sd::Real, aplus_log_mean::Real, aplus_log_sd::Real,
-                       p_alr_sd::Real, w_logit_sd::Real)
+                       p_alr_sd::AbstractVector{<:Real},
+                       w_logit_sd::AbstractVector{<:Real})
     T = eltype(θ)
     n_beta = (D - 1) * K
     total = zero(T)
@@ -66,43 +70,63 @@ function efdm_logprior(θ::AbstractVector, D::Int, K::Int,
     diff_a = θ[n_beta + 1] - T(aplus_log_mean)
     total -= T(0.5) * inv_ap_var * diff_a^2
 
-    inv_alr_var = inv(T(p_alr_sd)^2)
+    @assert length(p_alr_sd) == D - 1 "p_alr_sd must have length D-1 ($(D-1)), got $(length(p_alr_sd))"
     base_alr = n_beta + 2
-    @inbounds for i in base_alr:(base_alr + D - 2)
-        total -= T(0.5) * inv_alr_var * θ[i]^2
+    @inbounds for (j, i) in enumerate(base_alr:(base_alr + D - 2))
+        total -= T(0.5) * inv(T(p_alr_sd[j])^2) * θ[i]^2
     end
 
-    inv_w_var = inv(T(w_logit_sd)^2)
+    @assert length(w_logit_sd) == D "w_logit_sd must have length D ($D), got $(length(w_logit_sd))"
     base_w = n_beta + 2 + (D - 1)
-    @inbounds for i in base_w:(base_w + D - 1)
-        total -= T(0.5) * inv_w_var * θ[i]^2
+    @inbounds for (j, i) in enumerate(base_w:(base_w + D - 1))
+        total -= T(0.5) * inv(T(w_logit_sd[j])^2) * θ[i]^2
     end
 
     return total
+end
+
+# Scalar convenience wrappers
+function efdm_logprior(θ::AbstractVector, D::Int, K::Int,
+                       beta_sd::Real, aplus_log_mean::Real, aplus_log_sd::Real,
+                       p_alr_sd::Real, w_logit_sd::Real)
+    return efdm_logprior(θ, D, K, beta_sd, aplus_log_mean, aplus_log_sd,
+                         fill(p_alr_sd, D - 1), fill(w_logit_sd, D))
 end
 
 """
     fill_efdm_prior_sample!(θ, D, K, beta_sd, aplus_log_mean, aplus_log_sd, p_alr_sd, w_logit_sd, rng)
 
 Fill θ with an iid draw from the prior (in-place). Used by Pigeons.sample_iid!.
+
+`p_alr_sd` and `w_logit_sd` can be either scalars or vectors, matching `efdm_logprior`.
 """
 function fill_efdm_prior_sample!(θ::AbstractVector, D::Int, K::Int,
                                  beta_sd::Real, aplus_log_mean::Real, aplus_log_sd::Real,
-                                 p_alr_sd::Real, w_logit_sd::Real, rng::AbstractRNG)
+                                 p_alr_sd::AbstractVector{<:Real},
+                                 w_logit_sd::AbstractVector{<:Real}, rng::AbstractRNG)
     n_beta = (D - 1) * K
     @inbounds for i in 1:n_beta
         θ[i] = randn(rng) * beta_sd
     end
     θ[n_beta + 1] = aplus_log_mean + randn(rng) * aplus_log_sd
+    @assert length(p_alr_sd) == D - 1
     base_alr = n_beta + 2
-    @inbounds for i in base_alr:(base_alr + D - 2)
-        θ[i] = randn(rng) * p_alr_sd
+    @inbounds for (j, i) in enumerate(base_alr:(base_alr + D - 2))
+        θ[i] = randn(rng) * p_alr_sd[j]
     end
+    @assert length(w_logit_sd) == D
     base_w = n_beta + 2 + (D - 1)
-    @inbounds for i in base_w:(base_w + D - 1)
-        θ[i] = randn(rng) * w_logit_sd
+    @inbounds for (j, i) in enumerate(base_w:(base_w + D - 1))
+        θ[i] = randn(rng) * w_logit_sd[j]
     end
     return θ
+end
+
+function fill_efdm_prior_sample!(θ::AbstractVector, D::Int, K::Int,
+                                 beta_sd::Real, aplus_log_mean::Real, aplus_log_sd::Real,
+                                 p_alr_sd::Real, w_logit_sd::Real, rng::AbstractRNG)
+    return fill_efdm_prior_sample!(θ, D, K, beta_sd, aplus_log_mean, aplus_log_sd,
+                                   fill(p_alr_sd, D - 1), fill(w_logit_sd, D), rng)
 end
 
 # ─── Parameter unpacking ───────────────────────────────────────────────────────

@@ -78,6 +78,11 @@ log_sd = 1.0
 #
 #   sd = 2.0 is weakly informative — the prior on the simplex is diffuse
 #   but slightly concentrated toward uniform.
+#
+#   Per-category: provide a vector of length D-1 instead of a scalar to
+#   apply different regularization to each baseline weight. This is useful
+#   when the empirical Bayes auto-tune has determined per-category SDs.
+#   Example: sd = [1.5, 2.5, 0.8, 1.2]  (for D=5 categories)
 sd = 2.0
 
 [priors.w]
@@ -88,6 +93,10 @@ sd = 2.0
 #          w_j → 1 means baseline (p) dominates
 #
 #   sd = 2.0 is weakly informative.
+#
+#   Per-category: provide a vector of length D instead of a scalar.
+#   The auto-tune feature computes per-category w_sd from posterior variance.
+#   Example: sd = [2.0, 1.5, 3.0, 0.8, 2.5]  (for D=5 categories)
 sd = 2.0
 
 # ---------------------------------------------------------------------------
@@ -138,6 +147,30 @@ multithreaded = false
 [output]
 # Directory for all output files (plots, CSVs, report).
 dir = "efdm_output"
+
+# ---------------------------------------------------------------------------
+# [auto_tune] — Empirical Bayes regularization tuning
+# ---------------------------------------------------------------------------
+# When enabled, the runner performs an iterative empirical Bayes procedure
+# that adapts per-category prior SDs to match the posterior variance.
+
+[auto_tune]
+# Enable auto-tune loop. When true, the runner will run PT multiple times,
+# each time updating the per-category w_sd and p_sd to match the posterior.
+# Recommended: start with false, inspect convergence, then enable for tuning.
+enabled = false
+
+# Number of auto-tune iterations. 2-3 is usually sufficient.
+n_iter = 3
+
+# Inflation factor: new_sd = posterior_sd * inflation.
+# Higher values produce a more weakly informative prior (safer);
+# lower values risk overfitting the prior to the posterior.
+inflation = 1.5
+
+# Display covariance heatmaps for each parameter block after the final run.
+# Requires PlotlyJS for interactive HTML output.
+covariance_plots = true
 
 # =============================================================================
 # PARAMETER REFERENCE (quick lookup)
