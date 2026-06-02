@@ -1,0 +1,27 @@
+name = "EFDMAnalysis"
+uuid = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+version = "1.0.0"
+
+[deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+LogDensityProblems = "6fdf6af0-433a-55ae-8c51-2eb9e998f9b5"
+MCMCChains = "c7f686f2-ff18-58e9-bc7b-31028e88f75d"
+Pigeons = "4eada1e1-9255-4b5d-8cbe-e4c54dde9bb4"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
+
+[compat]
+julia = "1.9"
+Pigeons = "0.3"
+LogDensityProblems = "2"
+ForwardDiff = "0.10"
+MCMCChains = "6"
+CSV = "0.10"
+DataFrames = "1"
+TOML = "1"
