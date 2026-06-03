@@ -1,0 +1,201 @@
+# =============================================================================
+# EFDM Model Configuration
+# =============================================================================
+# This file specifies all model parameters, data mappings, and sampler
+# settings for an EFDM analysis run.
+#
+# Copy this template and edit the values for your analysis.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# [data] — Input data specification
+# ---------------------------------------------------------------------------
+# Expected format: CSV with one row per subject/donor.
+#   * The `response_columns` list names the columns containing integer counts
+#     for each response category (e.g., cell types).
+#   * The `covariate_columns` list names the columns to use as predictors.
+#     The intercept column is added automatically — do NOT include a column
+#     of 1's in the CSV.
+#   * `subject_column` (optional): name of a column containing subject IDs.
+#     If present, it is used for labeling only (not as a covariate).
+#
+# Compatible with: GoodWorkflows ingest_tabulate output format.
+#   ingest_tabulate produces a CSV where:
+#     - Rows = subjects
+#     - Columns = response categories + metadata/condition columns
+#   See README.md for more details on expected input schema.
+
+[data]
+path = "data/counts.csv"
+response_columns = ["CT0", "CT1", "CT2", "CT3", "CT4", "CT5"]
+covariate_columns = ["treatment", "age"]
+subject_column = "donor_id"
+merge_rare_types = true
+merge_threshold = 0.015   # Merge categories with mean proportion below this
+
+# ---------------------------------------------------------------------------
+# [priors] — Prior distributions for all parameter blocks
+# ---------------------------------------------------------------------------
+# EFDM has four parameter blocks: β (regression), aplus (overdispersion),
+# p (baseline mixture weights), and w (component weights).
+#
+# All priors are Normal distributions on the UNCONSTRAINED (real-valued)
+# parameterization. The model auto-transforms to the constrained space.
+#
+# For convergence recommendations, see notes below and README.md.
+
+[priors.beta]
+# Prior: β ~ Normal(0, sd²) independently per coefficient
+#   Shape: (D-1) × K matrix (last category is reference, fixed to zero)
+#   Role:  Log-odds of each category relative to the reference
+#   Interpretation: softmax(x · β) gives expected cell-type proportions
+#
+# CONVERGENCE NOTE: Keep sd ≤ 1.0. Wider priors (sd > 1.5) create massive
+# prior–posterior gaps that break the PT temperature ladder. For PBMC data,
+# sd = 1.0 is safely vague enough without causing convergence issues.
+sd = 1.0
+
+[priors.aplus]
+# Prior: log(aplus) ~ Normal(log_mean, log_sd²)
+#   log(aplus) is the unconstrained parameter; aplus = exp(log(aplus)) > 0
+#   Role:  Controls overdispersion relative to Multinomial
+#          aplus → ∞  = Multinomial (no overdispersion)
+#          aplus → 0  = extreme overdispersion
+#   Typical values: For PBMC data, aplus ≈ 10–30.
+#
+#   CONVERGENCE NOTE: log_sd = 1.0 is tight enough to guide the sampler
+#   without constraining the posterior. log_mean = 3.5 corresponds to
+#   a prior median of exp(3.5) ≈ 33, which is reasonable for PBMC.
+log_mean = 3.5
+log_sd = 1.0
+
+[priors.p]
+# Prior: ALR(p) ~ Normal(0, sd²) independently per element
+#   p is a D-element simplex (sums to 1) via additive log-ratio transform
+#   Role:  Baseline mixture weights. The expected proportion is:
+#          E[Y/n] ≈ (1-w) · mu + w · p
+#          where mu comes from regression (β) and w is the component weight.
+#
+#   sd = 2.0 is weakly informative — the prior on the simplex is diffuse
+#   but slightly concentrated toward uniform.
+#
+#   Per-category: provide a vector of length D-1 instead of a scalar to
+#   apply different regularization to each baseline weight. This is useful
+#   when the empirical Bayes auto-tune has determined per-category SDs.
+#   Example: sd = [1.5, 2.5, 0.8, 1.2]  (for D=5 categories)
+sd = 2.0
+
+[priors.w]
+# Prior: logit(w) ~ Normal(0, sd²) independently per element
+#   w_j ∈ (0, 1) via sigmoid transform, clamped to [1e-4, 1-1e-4]
+#   Role:  Mixture weight for each category:
+#          w_j → 0 means regression (β) determines proportion
+#          w_j → 1 means baseline (p) dominates
+#
+#   sd = 2.0 is weakly informative.
+#
+#   Per-category: provide a vector of length D instead of a scalar.
+#   The auto-tune feature computes per-category w_sd from posterior variance.
+#   Example: sd = [2.0, 1.5, 3.0, 0.8, 2.5]  (for D=5 categories)
+sd = 2.0
+
+# ---------------------------------------------------------------------------
+# [sampler] — Pigeons.jl parallel tempering settings
+# ---------------------------------------------------------------------------
+# These control the MCMC sampling. The defaults below are battle-tested
+# for EFDM on PBMC data (see lessons_learned.txt for the full tuning story).
+
+[sampler]
+# Number of parallel chains at different temperatures.
+# RECOMMENDATION: 20-30 with variational reference, 40-80 without.
+# CONVERGENCE: With GaussianReference, 30 chains is typically sufficient.
+n_chains = 30
+
+# Number of PT rounds. Each round doubles the number of scans.
+#   7-8:  fast iteration, diagnosis
+#   10-12: production inference
+# RECOMMENDATION: Start with 8 for fast iteration, increase to 10-12 for final.
+n_rounds = 8
+
+# MCMC explorer kernel.
+#   SliceSampler() — robust to funnel geometries, recommended for EFDM
+#   AutoMALA()     — gradient-based, but struggles with EFDM's a-p funnel
+# RECOMMENDATION: SliceSampler() for EFDM.
+explorer = "SliceSampler"
+
+# Use variational reference (GaussianReference) to bridge prior-posterior gap.
+#   CRITICAL: This is NOT optional for EFDM. Always use it.
+#   Without variational PT, the prior-posterior gap (Λ ≈ 10-12) prevents mixing.
+use_variational = true
+
+# Round at which to start fitting the variational approximation.
+#   Round 3 (= 8 scans) gives the cold chain time to find the typical set.
+first_tuning_round = 3
+
+# Chains allocated to the variational leg.
+#   Default: n_chains_variational = n_chains ÷ 3.
+n_chains_variational = 10
+
+# Enable multithreaded chains (default false for container environments).
+#   Set to true in production on multi-core machines.
+multithreaded = false
+
+# ---------------------------------------------------------------------------
+# [output] — Output configuration
+# ---------------------------------------------------------------------------
+
+[output]
+# Directory for all output files (plots, CSVs, report).
+dir = "efdm_output"
+
+# ---------------------------------------------------------------------------
+# [auto_tune] — Empirical Bayes regularization tuning
+# ---------------------------------------------------------------------------
+# When enabled, the runner performs an iterative empirical Bayes procedure
+# that adapts per-category prior SDs to match the posterior variance.
+
+[auto_tune]
+# Enable auto-tune loop. When true, the runner will run PT multiple times,
+# each time updating the per-category w_sd and p_sd to match the posterior.
+# Recommended: start with false, inspect convergence, then enable for tuning.
+enabled = false
+
+# Number of auto-tune iterations. 2-3 is usually sufficient.
+n_iter = 3
+
+# Inflation factor: new_sd = posterior_sd * inflation.
+# Higher values produce a more weakly informative prior (safer);
+# lower values risk overfitting the prior to the posterior.
+inflation = 1.5
+
+# Display covariance heatmaps for each parameter block after the final run.
+# Requires PlotlyJS for interactive HTML output.
+covariance_plots = true
+
+# =============================================================================
+# PARAMETER REFERENCE (quick lookup)
+# =============================================================================
+#
+# Model parameters (in unconstrained θ vector):
+#   Block 1: β[r, c] — (D-1) × K regression coefficients
+#     r = 1..D-1 (response category relative to reference D)
+#     c = 1..K   (covariates including intercept)
+#     Index in θ: θ[(r-1)*K + c]
+#
+#   Block 2: log(aplus) — scalar, position nβ + 1
+#     aplus = exp(log(aplus)), the overdispersion parameter
+#
+#   Block 3: ALR(p[1..D-1]) — D-1 values, position nβ+2 .. nβ+D
+#     p[j] = exp(θ[j]) / (1 + Σ exp(θ)), p[D] = 1 / (1 + Σ exp(θ))
+#
+#   Block 4: logit(w[1..D]) — D values, position nβ+D+1 .. nβ+2D
+#     w[j] = 1 / (1 + exp(-θ))
+#
+# Convergence thresholds:
+#   Λ ≤ 3, rst ≥ 10, Rhat < 1.05  →  CONVERGED
+#   Λ > 5, rst = 0                 →  BROKEN — add variational ref or tighten priors
+#
+# Key references:
+#   lessons_learned.txt — full convergence investigation report
+#   README.md — extended parameter documentation with tuning advice
+# =============================================================================

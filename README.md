@@ -22,6 +22,27 @@ The runner will:
 3. Print convergence diagnostics (barrier, restarts, Rhat)
 4. Generate plots and posterior summaries in `efdm_output/`
 
+## Mock Dataset For Local Testing
+
+You can generate a realistic donor-level test dataset that matches the
+GoodWorkflows-style schema (`donor_id`, `CT0..CT5`, `treatment`, `age`):
+
+```bash
+# Generate default mock dataset at data/mock_counts.csv (80 donors)
+julia scripts/generate_mock_counts.jl
+
+# Optional: custom output path, rows, seed
+julia scripts/generate_mock_counts.jl data/mock_counts.csv 120 20260602
+```
+
+Then run a fast smoke test config:
+
+```bash
+julia scripts/run_efdm.jl config/mock_model_config.toml
+```
+
+Outputs are written to `efdm_output_mock/`.
+
 ## Installation
 
 This is a standalone Julia package (no registry publication needed). To use it:

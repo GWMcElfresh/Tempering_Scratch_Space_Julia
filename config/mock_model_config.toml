@@ -1,0 +1,40 @@
+# Quick local smoke-test config using generated mock data.
+
+[data]
+path = "data/mock_counts.csv"
+response_columns = ["CT0", "CT1", "CT2", "CT3", "CT4", "CT5"]
+covariate_columns = ["treatment", "age"]
+subject_column = "donor_id"
+merge_rare_types = true
+merge_threshold = 0.015
+
+[priors.beta]
+sd = 1.0
+
+[priors.aplus]
+log_mean = 3.5
+log_sd = 1.0
+
+[priors.p]
+sd = 2.0
+
+[priors.w]
+sd = 2.0
+
+[sampler]
+n_chains = 12
+n_rounds = 6
+explorer = "SliceSampler"
+use_variational = true
+first_tuning_round = 3
+n_chains_variational = 4
+multithreaded = false
+
+[output]
+dir = "efdm_output_mock"
+
+[auto_tune]
+enabled = false
+n_iter = 2
+inflation = 1.5
+covariance_plots = true

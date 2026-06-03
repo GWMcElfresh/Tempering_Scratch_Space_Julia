@@ -184,12 +184,12 @@ function convergence_report_str(summary::ConvergenceSummary)
     push!(lines, "CONVERGENCE DIAGNOSTICS")
     push!(lines, "="^60)
 
-    @Λ_str = if summary.Λ_var !== nothing
+    Λ_str = if summary.Λ_var !== nothing
         @sprintf "  Λ (full ladder):           %.3f\n  Λ_var (variational leg):  %.3f" summary.Λ summary.Λ_var
     else
         @sprintf "  Λ (global barrier):        %.3f" summary.Λ
     end
-    push!(lines, @Λ_str)
+    push!(lines, Λ_str)
 
     push!(lines, @sprintf "  Tempered restarts:        %d" summary.restarts)
     push!(lines, @sprintf "  Round trips:              %d" summary.round_trips)
