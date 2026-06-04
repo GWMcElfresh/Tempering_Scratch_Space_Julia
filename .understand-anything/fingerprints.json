@@ -1,0 +1,437 @@
+{
+  "version": "1.0.0",
+  "gitCommitHash": "10c393e8ab80fb92592cfdd39c52de421212da71",
+  "generatedAt": "2026-06-03T18:04:20.500Z",
+  "files": {
+    ".understand-anything/.understandignore": {
+      "filePath": ".understand-anything/.understandignore",
+      "contentHash": "37c0d3b19982bbfcf6fed106c0399cc4d9f4c8fbe364286f21bc7e226b90e3de",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 18,
+      "hasStructuralAnalysis": false
+    },
+    "config/convergence_test_config.toml": {
+      "filePath": "config/convergence_test_config.toml",
+      "contentHash": "7220e27b8da2ce45f985d6a441d2e73070f43ee93a057b5aee9567352f567ee7",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 79,
+      "hasStructuralAnalysis": true
+    },
+    "config/mock_model_config.toml": {
+      "filePath": "config/mock_model_config.toml",
+      "contentHash": "e41a09716e7f1cafc60ec9bcf469baf075fac24caaf19900369ceda93a280a07",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 53,
+      "hasStructuralAnalysis": true
+    },
+    "config/model_config.toml": {
+      "filePath": "config/model_config.toml",
+      "contentHash": "1f8ef12bfd48cc97656f225fec635dbf1ff14e7b6ab761ce22e90c45360ee3c1",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 202,
+      "hasStructuralAnalysis": true
+    },
+    "data/convergence_test_counts.csv": {
+      "filePath": "data/convergence_test_counts.csv",
+      "contentHash": "247eb7a8931290643d747311d5b8a5870e10300b8d0ac04a5e72b7136665afe1",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 202,
+      "hasStructuralAnalysis": false
+    },
+    "data/mock_counts.csv": {
+      "filePath": "data/mock_counts.csv",
+      "contentHash": "7713bd1f97dd3251497063b8dca4cae5ab89201a6ad4d8d12758c452248c50ba",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 82,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/aplus_posterior_data.csv": {
+      "filePath": "efdm_output_mock/aplus_posterior_data.csv",
+      "contentHash": "e57865e70ece4396a8f635f94000a99b7f2ca135e00374500a50fae107287ffd",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 130,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/aplus_posterior.html": {
+      "filePath": "efdm_output_mock/aplus_posterior.html",
+      "contentHash": "7a206632031998a2f0c2bc2a4da9846ec3fe92c74c44da9b52c329cfce060b87",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 34,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/conditional_effects_data.csv": {
+      "filePath": "efdm_output_mock/conditional_effects_data.csv",
+      "contentHash": "b47c5c4375962a3085b035d47f246fa08576e718f6de113b0aa1118643641bdf",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 602,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/convergence_report.txt": {
+      "filePath": "efdm_output_mock/convergence_report.txt",
+      "contentHash": "cdbf59285c03d6fdca81d3688424c3f18a78abea3f15f540d3565359ed87c3d0",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 16,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/correlation_mu_data.csv": {
+      "filePath": "efdm_output_mock/correlation_mu_data.csv",
+      "contentHash": "d751a1b76fe9285b0f7573c1ed301dfa1d4ecd569e4f4b2cfc570046bf37429c",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 8,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/correlation_mu.html": {
+      "filePath": "efdm_output_mock/correlation_mu.html",
+      "contentHash": "8bddb0f33b9de8e0f2ce304f9c6e56baaf7a7b9e4ffcb38f78521b6bbdbae5ee",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 34,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/covariance_alr_p_data.csv": {
+      "filePath": "efdm_output_mock/covariance_alr_p_data.csv",
+      "contentHash": "d17a37d14aa89e2bda6114eec6870f0f62200fda6939efa7b465b48cd6789419",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 7,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/covariance_alr_p.html": {
+      "filePath": "efdm_output_mock/covariance_alr_p.html",
+      "contentHash": "8436ed1cb18ab47fa916c858a8ccac2a81e7e4fe4974629ae4e77c3e677faf67",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 34,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/covariance_logit_w_data.csv": {
+      "filePath": "efdm_output_mock/covariance_logit_w_data.csv",
+      "contentHash": "ab90a2a637d53cd12ea852452eae7280a62eb68204f3dfdbb9ae03ce2310bc22",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 8,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/covariance_logit_w.html": {
+      "filePath": "efdm_output_mock/covariance_logit_w.html",
+      "contentHash": "f561b5149eaa050f4266cd5c4c878d0bebfb7d7ace46d08ed5a33be9b45e3371",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 34,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/covariance_mu_data.csv": {
+      "filePath": "efdm_output_mock/covariance_mu_data.csv",
+      "contentHash": "bdd401a40d5e655fdbf9425c2515b12f3109db24c67cf7b1217ed3c344dc9bfa",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 8,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/covariance_mu.html": {
+      "filePath": "efdm_output_mock/covariance_mu.html",
+      "contentHash": "ec383f52046212009f12081c19f7cf1459e4a96bfdc89fb621a6807145478dc4",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 34,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/effect_age.html": {
+      "filePath": "efdm_output_mock/effect_age.html",
+      "contentHash": "c6f6f8b02e1dd5ea6f602b45a72c211bef6d3fbbc0c66af6e9250504ac981e2f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 34,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/effect_treatment.html": {
+      "filePath": "efdm_output_mock/effect_treatment.html",
+      "contentHash": "4560fbbfb1218345f85fa2529c8df10f355e746f9c20b0b37cd842bb7447c276",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 34,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/posterior_summary.csv": {
+      "filePath": "efdm_output_mock/posterior_summary.csv",
+      "contentHash": "f859601b1243a9e9985c3d8d8aef5f276e99b17babb598fc8a0c96799147c289",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 29,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/rhat_data.csv": {
+      "filePath": "efdm_output_mock/rhat_data.csv",
+      "contentHash": "2e591d050e7b520fdb3c43b6dd075170c19aaed6cf0086ce37b5b9a8a9cb2f51",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 29,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/rhat_summary.html": {
+      "filePath": "efdm_output_mock/rhat_summary.html",
+      "contentHash": "022120c5bd4bf1dcbf7bae96c7c3c0916f9843da06f9dad828b155235c72c9c3",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 34,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/shrinkage_data.csv": {
+      "filePath": "efdm_output_mock/shrinkage_data.csv",
+      "contentHash": "2e5ce00a86467cf7c98a55aa559a67fa4abfa88b826dff7bfd4e4991e7e75f37",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 17,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/shrinkage.html": {
+      "filePath": "efdm_output_mock/shrinkage.html",
+      "contentHash": "b1b0e9c05d9b2ace33f5527d6cb8f411c674c4035cdbe4ced3df00492fb3871a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 34,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/trace_data.csv": {
+      "filePath": "efdm_output_mock/trace_data.csv",
+      "contentHash": "6b60442909f31ec6cfe269b0e82d7add346688a033584ab13f9aa879b75c88df",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 642,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/trace_log_aplus.html": {
+      "filePath": "efdm_output_mock/trace_log_aplus.html",
+      "contentHash": "b719cfd89093e4d7519ec8feaba1073c9fec4e01f0bf15f5730b6090683dc7e3",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 34,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/trace_β[1].html": {
+      "filePath": "efdm_output_mock/trace_β[1].html",
+      "contentHash": "bcf42f7458cc278ea620f8edd4ec1a3f67ee859f87aaf0bc912bd2083dee07cb",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 34,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/trace_β[2].html": {
+      "filePath": "efdm_output_mock/trace_β[2].html",
+      "contentHash": "74a647324cbe569ac0ad16e8b7b5710a28ca1c31097d7c7b3fbdf537a5380c8c",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 34,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/trace_β[3].html": {
+      "filePath": "efdm_output_mock/trace_β[3].html",
+      "contentHash": "0f8d3a8e07fb44ca7c9f4e0ff96df6e5aee320cc2ad692ff52d2e25c22a59b3f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 34,
+      "hasStructuralAnalysis": false
+    },
+    "efdm_output_mock/trace_β[4].html": {
+      "filePath": "efdm_output_mock/trace_β[4].html",
+      "contentHash": "20c15c73e7c21a75187daaafd37cc17becca3909a63ca3c7ad0a51c756b40f00",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 34,
+      "hasStructuralAnalysis": false
+    },
+    "Manifest.toml": {
+      "filePath": "Manifest.toml",
+      "contentHash": "41a226eacaf0ffcfa9ff66b79ee2894823ec4288a32fd8e528284e4d9b063d25",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1182,
+      "hasStructuralAnalysis": true
+    },
+    "my_config.toml": {
+      "filePath": "my_config.toml",
+      "contentHash": "1f8ef12bfd48cc97656f225fec635dbf1ff14e7b6ab761ce22e90c45360ee3c1",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 202,
+      "hasStructuralAnalysis": true
+    },
+    "Project.toml": {
+      "filePath": "Project.toml",
+      "contentHash": "2fa8086f59a6e1b93cf35ce27b64cadccf79f58f24108cf18d7992504f8e0119",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 29,
+      "hasStructuralAnalysis": true
+    },
+    "README.md": {
+      "filePath": "README.md",
+      "contentHash": "15707425353fff555d9b5ff0e0964a3ae073e8e40accc55ec122f6da1b54a041",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 468,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/generate_mock_counts.jl": {
+      "filePath": "scripts/generate_mock_counts.jl",
+      "contentHash": "0963b0c286722c58fa335e0e1210b7acc8e8a7cd7d0e21f0a97d2a091face4e5",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 221,
+      "hasStructuralAnalysis": false
+    },
+    "scripts/run_efdm.jl": {
+      "filePath": "scripts/run_efdm.jl",
+      "contentHash": "5d428cc2ef6e59c116d34ce7a7b730c570f623f5ffe87a260bbaba854c9edf5b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 353,
+      "hasStructuralAnalysis": false
+    },
+    "src/autotune.jl": {
+      "filePath": "src/autotune.jl",
+      "contentHash": "57a6397f0796e61cbe23669ae27dbe3dfb08f8a81d6cb7614f12cafcc905431e",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 546,
+      "hasStructuralAnalysis": false
+    },
+    "src/core.jl": {
+      "filePath": "src/core.jl",
+      "contentHash": "316d890549707629572318f21514956ee6abe0f26b8b4f502489ddf453f1792d",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 366,
+      "hasStructuralAnalysis": false
+    },
+    "src/diagnostics.jl": {
+      "filePath": "src/diagnostics.jl",
+      "contentHash": "f409b895a0c070496fd2f43b3364c61371e54ffbfce3f4eb3c99256a9fec88bf",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 380,
+      "hasStructuralAnalysis": false
+    },
+    "src/EFDMAnalysis.jl": {
+      "filePath": "src/EFDMAnalysis.jl",
+      "contentHash": "31190f586c4c0c5baf3ded88c039fb58065d96728b10b8f6baa1d68272ccc668",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 41,
+      "hasStructuralAnalysis": false
+    },
+    "src/plotting.jl": {
+      "filePath": "src/plotting.jl",
+      "contentHash": "dd5ad53c8a52ecde8d80101244f9cde4058918397f4622af1371d7b6cf774df9",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 593,
+      "hasStructuralAnalysis": false
+    },
+    "src/targets.jl": {
+      "filePath": "src/targets.jl",
+      "contentHash": "8f58f0dfc824b00ebfff350c8dee3b5186a85de3e257b3d34e4f2caeebbc6133",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 159,
+      "hasStructuralAnalysis": false
+    }
+  }
+}

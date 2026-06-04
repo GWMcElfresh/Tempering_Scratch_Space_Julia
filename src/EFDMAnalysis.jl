@@ -9,8 +9,10 @@ using SpecialFunctions: loggamma
 # Re-export key public API
 export EFDMLogPotential, EFDMReference
 export efdm_n_params, simulate_efdm
-export ConvergenceSummary, convergence_summary, convergence_assessment
+export ConvergenceSummary, convergence_summary, convergence_assessment,
+       convergence_report_str
 export extract_target_chain_indices, extract_parameter_draws
+export generate_param_names, posterior_summary_table
 
 # Core math (pure functions)
 include("core.jl")
@@ -33,5 +35,6 @@ export posterior_logit_w_covariance, posterior_alr_p_covariance
 export posterior_mu_covariance, posterior_mu_covariance_cond
 export auto_tune_round, run_auto_tune
 export plot_covariance_heatmap, plot_shrinkage_barchart, plot_all_covariances
+export plot_aplus_posterior, plot_conditional_effects, plot_rhat_summary, plot_traces
 
 end # module

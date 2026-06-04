@@ -194,7 +194,7 @@ else
     error("Unknown explorer: $explorer_str. Use 'SliceSampler' or 'AutoMALA'.")
 end
 
-# Build sampler kwargs
+# Build sampler kwargs (shared between single-run and auto-tune paths)
 sampler_kwargs = (
     n_chains=n_chains, n_rounds=n_rounds,
     explorer=explorer, multithreaded=multithreaded,
@@ -202,7 +202,10 @@ sampler_kwargs = (
     record=[traces; round_trip; index_process; record_default()],
 )
 
-pt_kwargs = [
+# Build pt_kwargs for the single-run path. Use a Dict rather than a
+# Vector{Pair} so that duplicate keys throw errors instead of silently
+# overwriting.
+pt_kwargs = Dict{Symbol, Any}(
     :target => make_target(),
     :reference => make_ref(),
     :n_chains => n_chains,
@@ -211,13 +214,13 @@ pt_kwargs = [
     :multithreaded => multithreaded,
     :extended_traces => true,
     :record => [traces; round_trip; index_process; record_default()],
-]
+)
 
 if use_var
     ft_round = get(sampler_config, "first_tuning_round", 3)
     n_var_chains = get(sampler_config, "n_chains_variational", div(n_chains, 3))
-    push!(pt_kwargs, :variational => GaussianReference(first_tuning_round=ft_round))
-    push!(pt_kwargs, :n_chains_variational => n_var_chains)
+    pt_kwargs[:variational] = GaussianReference(first_tuning_round=ft_round)
+    pt_kwargs[:n_chains_variational] = n_var_chains
     @printf "  Variational PT: on (n_var=%d, first_tuning_round=%d)\n" n_var_chains ft_round
 else
     @printf "  Variational PT: off (only recommended for testing)\n"
@@ -229,6 +232,8 @@ flush(stdout)
 # ─── 6b. Output directory ─────────────────────────────────────────────────
 output_dir = get(config, "output", Dict()) |> d -> get(d, "dir", "efdm_output")
 mkpath(output_dir)
+plots_dir = joinpath(output_dir, "plots")
+mkpath(plots_dir)
 
 # ─── 7. Auto-tune or single run ───────────────────────────────────────────
 auto_tune_config = get(config, "auto_tune", Dict())
@@ -283,8 +288,10 @@ write(report_path, report)
 
 # ─── 9. Posterior summary & shrinkage ─────────────────────────────────────
 # Posterior summary
+model_n_params = efdm_n_params(D, K)  # model parameters only (Pigeons may append extras)
 param_names = generate_param_names(D, K)
-samples = sample_array(pt)
+samples_raw = sample_array(pt)
+samples = samples_raw[:, 1:model_n_params, :]  # drop non-model columns
 tci = extract_target_chain_indices(pt)
 post_df = posterior_summary_table(samples, param_names, tci)
 post_csv = joinpath(output_dir, "posterior_summary.csv")
@@ -295,13 +302,13 @@ CSV.write(post_csv, post_df)
 shr = shrinkage_report(pt, D, K, beta_sd, ap_log_sd,
                         p_alr_sd, w_logit_sd)
 println(shrinkage_report_str(shr; D=D, K=K))
-plot_shrinkage_barchart(shr; D=D, K=K, output_dir=output_dir)
+plot_shrinkage_barchart(shr; D=D, K=K, output_dir=plots_dir)
 
 # ─── 10. Plots ────────────────────────────────────────────────────────────
-plot_aplus_posterior(pt, D, K; output_dir=output_dir)
+plot_aplus_posterior(pt, D, K; output_dir=plots_dir)
 plot_conditional_effects(pt, D, K, X, Float64.(Y_merged),
-                          covariate_names; output_dir=output_dir)
-plot_rhat_summary(pt; output_dir=output_dir)
+                          covariate_names; output_dir=plots_dir)
+plot_rhat_summary(pt; output_dir=plots_dir)
 
 # Trace plots for key parameters
 key_params = Int[(D-1)*K + 1]
@@ -311,14 +318,14 @@ for i in 1:min(n_beta, 4)
     push!(key_params, i)
     push!(key_names, "β[$i]")
 end
-plot_traces(pt, key_params, key_names; output_dir=output_dir)
+plot_traces(pt, key_params, key_names; output_dir=plots_dir)
 
 # ─── 11. Covariance heatmaps (optional) ───────────────────────────────────
 do_cov_plots = get(auto_tune_config, "covariance_plots",
                     get(config, "output", Dict()) |> d -> get(d, "covariance_plots", true))
 if do_cov_plots
     println("\n── Computing posterior covariance heatmaps ──")
-    plot_all_covariances(pt, D, K, X, covariate_names; output_dir=output_dir)
+    plot_all_covariances(pt, D, K, X, covariate_names; output_dir=plots_dir)
 end
 
 # ─── 12. aplus-specific summary ───────────────────────────────────────────
@@ -333,11 +340,15 @@ aplus_ci = quantile(aplus_draws, [0.025, 0.975])
 # ─── 13. Save PT result ───────────────────────────────────────────────────
 save_path = joinpath(output_dir, "pt_result.jld2")
 try
-    using JLD2
-    @save save_path pt samples tci D K X Y_merged covariate_names
+    @eval using JLD2
+    JLD2.save(save_path,
+              "pt", pt, "samples", samples,
+              "tci", tci, "D", D, "K", K,
+              "X", X, "Y_merged", Y_merged,
+              "covariate_names", covariate_names)
     @info "Saved full PT result: $save_path"
 catch
-    @info "JLD2 not available. To save PT result for later reuse: Pkg.add(\"JLD2\")"
+    @info "JLD2 not available. To save PT result later: Pkg.add(\"JLD2\")"
 end
 
 println("\nDone! All outputs in: $(abspath(output_dir))")

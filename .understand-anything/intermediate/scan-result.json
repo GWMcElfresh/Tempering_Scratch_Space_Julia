@@ -1,0 +1,322 @@
+{
+  "name": "EFDMAnalysis",
+  "description": "Bayesian analysis of multivariate count data using the Extended Flexible Dirichlet Multinomial (EFDM) model with Parallel Tempering (Pigeons.jl). Designed for cell-type composition analysis from single-cell genomics data, but applicable to any multivariate count regression problem.",
+  "languages": [
+    "csv",
+    "html",
+    "jl",
+    "markdown",
+    "toml",
+    "txt",
+    "unknown"
+  ],
+  "frameworks": [],
+  "files": [
+    {
+      "path": ".understand-anything/.understandignore",
+      "language": "unknown",
+      "sizeLines": 17,
+      "fileCategory": "code"
+    },
+    {
+      "path": "config/convergence_test_config.toml",
+      "language": "toml",
+      "sizeLines": 78,
+      "fileCategory": "config"
+    },
+    {
+      "path": "config/mock_model_config.toml",
+      "language": "toml",
+      "sizeLines": 52,
+      "fileCategory": "config"
+    },
+    {
+      "path": "config/model_config.toml",
+      "language": "toml",
+      "sizeLines": 201,
+      "fileCategory": "config"
+    },
+    {
+      "path": "data/convergence_test_counts.csv",
+      "language": "csv",
+      "sizeLines": 201,
+      "fileCategory": "data"
+    },
+    {
+      "path": "data/mock_counts.csv",
+      "language": "csv",
+      "sizeLines": 81,
+      "fileCategory": "data"
+    },
+    {
+      "path": "efdm_output_mock/aplus_posterior_data.csv",
+      "language": "csv",
+      "sizeLines": 129,
+      "fileCategory": "data"
+    },
+    {
+      "path": "efdm_output_mock/aplus_posterior.html",
+      "language": "html",
+      "sizeLines": 33,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "efdm_output_mock/conditional_effects_data.csv",
+      "language": "csv",
+      "sizeLines": 601,
+      "fileCategory": "data"
+    },
+    {
+      "path": "efdm_output_mock/convergence_report.txt",
+      "language": "txt",
+      "sizeLines": 15,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "efdm_output_mock/correlation_mu_data.csv",
+      "language": "csv",
+      "sizeLines": 7,
+      "fileCategory": "data"
+    },
+    {
+      "path": "efdm_output_mock/correlation_mu.html",
+      "language": "html",
+      "sizeLines": 33,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "efdm_output_mock/covariance_alr_p_data.csv",
+      "language": "csv",
+      "sizeLines": 6,
+      "fileCategory": "data"
+    },
+    {
+      "path": "efdm_output_mock/covariance_alr_p.html",
+      "language": "html",
+      "sizeLines": 33,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "efdm_output_mock/covariance_logit_w_data.csv",
+      "language": "csv",
+      "sizeLines": 7,
+      "fileCategory": "data"
+    },
+    {
+      "path": "efdm_output_mock/covariance_logit_w.html",
+      "language": "html",
+      "sizeLines": 33,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "efdm_output_mock/covariance_mu_data.csv",
+      "language": "csv",
+      "sizeLines": 7,
+      "fileCategory": "data"
+    },
+    {
+      "path": "efdm_output_mock/covariance_mu.html",
+      "language": "html",
+      "sizeLines": 33,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "efdm_output_mock/effect_age.html",
+      "language": "html",
+      "sizeLines": 33,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "efdm_output_mock/effect_treatment.html",
+      "language": "html",
+      "sizeLines": 33,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "efdm_output_mock/posterior_summary.csv",
+      "language": "csv",
+      "sizeLines": 28,
+      "fileCategory": "data"
+    },
+    {
+      "path": "efdm_output_mock/rhat_data.csv",
+      "language": "csv",
+      "sizeLines": 28,
+      "fileCategory": "data"
+    },
+    {
+      "path": "efdm_output_mock/rhat_summary.html",
+      "language": "html",
+      "sizeLines": 33,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "efdm_output_mock/shrinkage_data.csv",
+      "language": "csv",
+      "sizeLines": 16,
+      "fileCategory": "data"
+    },
+    {
+      "path": "efdm_output_mock/shrinkage.html",
+      "language": "html",
+      "sizeLines": 33,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "efdm_output_mock/trace_data.csv",
+      "language": "csv",
+      "sizeLines": 641,
+      "fileCategory": "data"
+    },
+    {
+      "path": "efdm_output_mock/trace_log_aplus.html",
+      "language": "html",
+      "sizeLines": 33,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "efdm_output_mock/trace_\u03b2[1].html",
+      "language": "html",
+      "sizeLines": 33,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "efdm_output_mock/trace_\u03b2[2].html",
+      "language": "html",
+      "sizeLines": 33,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "efdm_output_mock/trace_\u03b2[3].html",
+      "language": "html",
+      "sizeLines": 33,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "efdm_output_mock/trace_\u03b2[4].html",
+      "language": "html",
+      "sizeLines": 33,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "Manifest.toml",
+      "language": "toml",
+      "sizeLines": 1181,
+      "fileCategory": "config"
+    },
+    {
+      "path": "my_config.toml",
+      "language": "toml",
+      "sizeLines": 201,
+      "fileCategory": "config"
+    },
+    {
+      "path": "Project.toml",
+      "language": "toml",
+      "sizeLines": 28,
+      "fileCategory": "config"
+    },
+    {
+      "path": "README.md",
+      "language": "markdown",
+      "sizeLines": 467,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "scripts/generate_mock_counts.jl",
+      "language": "jl",
+      "sizeLines": 220,
+      "fileCategory": "code"
+    },
+    {
+      "path": "scripts/run_efdm.jl",
+      "language": "jl",
+      "sizeLines": 352,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/autotune.jl",
+      "language": "jl",
+      "sizeLines": 545,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/core.jl",
+      "language": "jl",
+      "sizeLines": 365,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/diagnostics.jl",
+      "language": "jl",
+      "sizeLines": 379,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/EFDMAnalysis.jl",
+      "language": "jl",
+      "sizeLines": 40,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/plotting.jl",
+      "language": "jl",
+      "sizeLines": 592,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/targets.jl",
+      "language": "jl",
+      "sizeLines": 158,
+      "fileCategory": "code"
+    }
+  ],
+  "totalFiles": 43,
+  "filteredByIgnore": 0,
+  "estimatedComplexity": "moderate",
+  "importMap": {
+    ".understand-anything/.understandignore": [],
+    "config/convergence_test_config.toml": [],
+    "config/mock_model_config.toml": [],
+    "config/model_config.toml": [],
+    "data/convergence_test_counts.csv": [],
+    "data/mock_counts.csv": [],
+    "efdm_output_mock/aplus_posterior_data.csv": [],
+    "efdm_output_mock/aplus_posterior.html": [],
+    "efdm_output_mock/conditional_effects_data.csv": [],
+    "efdm_output_mock/convergence_report.txt": [],
+    "efdm_output_mock/correlation_mu_data.csv": [],
+    "efdm_output_mock/correlation_mu.html": [],
+    "efdm_output_mock/covariance_alr_p_data.csv": [],
+    "efdm_output_mock/covariance_alr_p.html": [],
+    "efdm_output_mock/covariance_logit_w_data.csv": [],
+    "efdm_output_mock/covariance_logit_w.html": [],
+    "efdm_output_mock/covariance_mu_data.csv": [],
+    "efdm_output_mock/covariance_mu.html": [],
+    "efdm_output_mock/effect_age.html": [],
+    "efdm_output_mock/effect_treatment.html": [],
+    "efdm_output_mock/posterior_summary.csv": [],
+    "efdm_output_mock/rhat_data.csv": [],
+    "efdm_output_mock/rhat_summary.html": [],
+    "efdm_output_mock/shrinkage_data.csv": [],
+    "efdm_output_mock/shrinkage.html": [],
+    "efdm_output_mock/trace_data.csv": [],
+    "efdm_output_mock/trace_log_aplus.html": [],
+    "efdm_output_mock/trace_\u03b2[1].html": [],
+    "efdm_output_mock/trace_\u03b2[2].html": [],
+    "efdm_output_mock/trace_\u03b2[3].html": [],
+    "efdm_output_mock/trace_\u03b2[4].html": [],
+    "Manifest.toml": [],
+    "my_config.toml": [],
+    "Project.toml": [],
+    "README.md": [],
+    "scripts/generate_mock_counts.jl": [],
+    "scripts/run_efdm.jl": [],
+    "src/autotune.jl": [],
+    "src/core.jl": [],
+    "src/diagnostics.jl": [],
+    "src/EFDMAnalysis.jl": [],
+    "src/plotting.jl": [],
+    "src/targets.jl": []
+  }
+}

@@ -147,9 +147,12 @@ function shrinkage_report(pt, D::Int, K::Int,
 
     # Get posterior draws (prefer variational for speed, fall back to PT)
     θ_draws = sample_variational_posterior(pt, n_draws)
-    n_params = size(θ_draws, 2)
 
-    # Posterior variance in unconstrained space
+    # Use model-parameter count derived from D, K rather than from the sample
+    # array, which may include Pigeons auxiliary columns.
+    n_params = efdm_n_params(D, K)
+
+    # Posterior variance in unconstrained space (only model parameters)
     post_var = [var(@view(θ_draws[:, p])) for p in 1:n_params]
 
     # Prior variances
@@ -171,7 +174,7 @@ function shrinkage_report(pt, D::Int, K::Int,
     shr_beta = shrinkage[1:n_beta]
     shr_aplus = shrinkage[n_beta + 1]
     shr_p = shrinkage[n_beta + 2 : n_beta + D]
-    shr_w = shrinkage[n_beta + D + 1 : n_beta + 2 * D - 1]
+    shr_w = shrinkage[n_beta + D + 1 : n_beta + 2 * D]
 
     return (
         beta=shr_beta,
@@ -518,10 +521,12 @@ function run_auto_tune(target_fn, reference_fn, sampler_kwargs;
 
         # Save intermediate results if we have plotting data
         if size(X, 1) > 0
-            plts_dir = joinpath(output_dir, "round_$round")
-            mkpath(plts_dir)
+            round_dir = joinpath(output_dir, "round_$round")
+            mkpath(round_dir)
+            round_plots_dir = joinpath(round_dir, "plots")
+            mkpath(round_plots_dir)
             plot_all_diagnostics(pt, D, K, X, Y,
-                                 covariate_names; output_dir=plts_dir)
+                                 covariate_names; output_dir=round_plots_dir)
         end
     end
 

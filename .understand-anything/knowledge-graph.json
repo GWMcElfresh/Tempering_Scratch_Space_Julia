@@ -1,0 +1,2317 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "EFDMAnalysis",
+    "languages": [
+      "jl",
+      "toml",
+      "markdown",
+      "csv",
+      "html",
+      "txt"
+    ],
+    "frameworks": [],
+    "description": "Bayesian analysis of multivariate count data using the Extended Flexible Dirichlet Multinomial (EFDM) model with Parallel Tempering (Pigeons.jl)",
+    "analyzedAt": "2026-06-03T18:03:52.694Z",
+    "gitCommitHash": "10c393e8ab80fb92592cfdd39c52de421212da71"
+  },
+  "nodes": [
+    {
+      "id": "config:Manifest.toml",
+      "type": "config",
+      "name": "Manifest.toml",
+      "filePath": "Manifest.toml",
+      "summary": "Machine-generated Julia manifest file pinning exact versions of all 90+ direct and transitive dependencies for the EFDMAnalysis project, including Pigeons.jl, Distributions.jl, and MCMCChains.jl.",
+      "tags": [
+        "configuration",
+        "dependencies",
+        "build-system",
+        "julia"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "config:Project.toml",
+      "type": "config",
+      "name": "Project.toml",
+      "filePath": "Project.toml",
+      "summary": "Julia project configuration defining the EFDMAnalysis package metadata, 13 direct dependencies (Pigeons, Distributions, CSV, DataFrames, ForwardDiff, etc.), and version compatibility constraints for the EFDM Bayesian analysis pipeline.",
+      "tags": [
+        "configuration",
+        "dependencies",
+        "build-system",
+        "julia"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "README.md",
+      "summary": "Comprehensive project documentation covering installation, data format specification, model parameter reference (beta, aplus, p, w), convergence recommendations using variational PT and SliceSampler, output interpretation with convergence diagnostics, covariance heatmap analysis, per-category regularization, empirical Bayes auto-tuning, and programmatic API for the EFDM Bayesian regression package.",
+      "tags": [
+        "documentation",
+        "bayesian-inference",
+        "mcmc",
+        "model-reference"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "config:my_config.toml",
+      "type": "config",
+      "name": "my_config.toml",
+      "filePath": "my_config.toml",
+      "summary": "Detailed runtime configuration for the EFDM model specifying data mappings (response columns, covariates, subject IDs), prior distributions for all four parameter blocks (beta with sd=1.0, aplus with log-mean=3.5, p and w with sd=2.0), Pigeons.jl parallel tempering sampler settings (30 chains, 8 rounds, SliceSampler, variational PT), output directory, and empirical Bayes auto-tuning parameters.",
+      "tags": [
+        "configuration",
+        "bayesian-inference",
+        "mcmc",
+        "model-parameters",
+        "sampler-settings"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:config/convergence_test_config.toml",
+      "type": "config",
+      "name": "convergence_test_config.toml",
+      "filePath": "config/convergence_test_config.toml",
+      "summary": "Configuration for a convergence test run using biased 3-category mock data with 16 PT chains and variational reference, targeting Lambda < 6, restarts >= 15, and Rhat < 1.05.",
+      "tags": [
+        "configuration",
+        "convergence-test",
+        "efdm",
+        "mcmc",
+        "pigeons-jl"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:config/mock_model_config.toml",
+      "type": "config",
+      "name": "mock_model_config.toml",
+      "filePath": "config/mock_model_config.toml",
+      "summary": "Configuration for EFDM analysis on 80-donor 6-category mock data with 40 PT chains and variational reference for reliable convergence.",
+      "tags": [
+        "configuration",
+        "mock-data",
+        "efdm",
+        "mcmc",
+        "pigeons-jl"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:config/model_config.toml",
+      "type": "config",
+      "name": "model_config.toml",
+      "filePath": "config/model_config.toml",
+      "summary": "Master configuration template for EFDM model analysis specifying data mappings, Normal priors for all four parameter blocks (beta, aplus, p, w), Pigeons.jl sampler settings with SliceSampler and variational reference, plus auto-tune empirical Bayes tuning options.",
+      "tags": [
+        "configuration",
+        "template",
+        "efdm",
+        "mcmc",
+        "pigeons-jl"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TOML config with 8 top-level sections: data, priors.beta, priors.aplus, priors.p, priors.w, sampler, output, and auto_tune. Extensive inline documentation covers parameter interpretation and convergence guidance."
+    },
+    {
+      "id": "file:efdm_output_mock/aplus_posterior.html",
+      "type": "file",
+      "name": "aplus_posterior.html",
+      "filePath": "efdm_output_mock/aplus_posterior.html",
+      "summary": "Interactive Plotly histogram showing the posterior distribution of the overdispersion parameter aplus with a vertical line at the posterior mean.",
+      "tags": [
+        "visualization",
+        "posterior",
+        "overdispersion",
+        "plotly"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/aplus_posterior_data.csv",
+      "type": "file",
+      "name": "aplus_posterior_data.csv",
+      "filePath": "efdm_output_mock/aplus_posterior_data.csv",
+      "summary": "Single-column CSV file containing posterior MCMC samples for the aplus (overdispersion) parameter.",
+      "tags": [
+        "posterior",
+        "mcmc-samples",
+        "overdispersion",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/conditional_effects_data.csv",
+      "type": "file",
+      "name": "conditional_effects_data.csv",
+      "filePath": "efdm_output_mock/conditional_effects_data.csv",
+      "summary": "Grid of expected cell type proportions across the range of each covariate, used for plotting conditional effect curves for age and treatment.",
+      "tags": [
+        "conditional-effects",
+        "covariate",
+        "cell-type-proportions",
+        "data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:efdm_output_mock/convergence_report.txt",
+      "type": "document",
+      "name": "convergence_report.txt",
+      "filePath": "efdm_output_mock/convergence_report.txt",
+      "summary": "Convergence diagnostics report summarizing global barrier, tempered restarts, round trips, maximum Rhat, and minimum ESS with FAILED status and recommendations.",
+      "tags": [
+        "convergence",
+        "diagnostics",
+        "mcmc",
+        "rhat"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/correlation_mu.html",
+      "type": "file",
+      "name": "correlation_mu.html",
+      "filePath": "efdm_output_mock/correlation_mu.html",
+      "summary": "Interactive Plotly heatmap displaying the posterior correlation matrix of cell type proportions (mu).",
+      "tags": [
+        "visualization",
+        "correlation",
+        "cell-type-proportions",
+        "plotly"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/correlation_mu_data.csv",
+      "type": "file",
+      "name": "correlation_mu_data.csv",
+      "filePath": "efdm_output_mock/correlation_mu_data.csv",
+      "summary": "6x6 correlation matrix CSV for cell type proportions (CT0 through CT5) computed from posterior samples.",
+      "tags": [
+        "correlation",
+        "cell-type-proportions",
+        "matrix",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/covariance_alr_p.html",
+      "type": "file",
+      "name": "covariance_alr_p.html",
+      "filePath": "efdm_output_mock/covariance_alr_p.html",
+      "summary": "Interactive Plotly heatmap showing the covariance matrix of additive-log-ratio (ALR) transformed cell type probabilities.",
+      "tags": [
+        "visualization",
+        "covariance",
+        "alr",
+        "plotly"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/covariance_alr_p_data.csv",
+      "type": "file",
+      "name": "covariance_alr_p_data.csv",
+      "filePath": "efdm_output_mock/covariance_alr_p_data.csv",
+      "summary": "5x5 covariance matrix CSV for additive-log-ratio transformed cell type probabilities (p[1] through p[5]).",
+      "tags": [
+        "covariance",
+        "alr",
+        "matrix",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/covariance_logit_w.html",
+      "type": "file",
+      "name": "covariance_logit_w.html",
+      "filePath": "efdm_output_mock/covariance_logit_w.html",
+      "summary": "Interactive Plotly heatmap showing the covariance matrix of logit-transformed multivariate normal random effects (w).",
+      "tags": [
+        "visualization",
+        "covariance",
+        "logit",
+        "random-effects",
+        "plotly"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/covariance_logit_w_data.csv",
+      "type": "file",
+      "name": "covariance_logit_w_data.csv",
+      "filePath": "efdm_output_mock/covariance_logit_w_data.csv",
+      "summary": "Covariance matrix CSV for logit-transformed random effects w[1] through w[6] from the EFDM model.",
+      "tags": [
+        "covariance",
+        "logit",
+        "random-effects",
+        "matrix",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/covariance_mu.html",
+      "type": "file",
+      "name": "covariance_mu.html",
+      "filePath": "efdm_output_mock/covariance_mu.html",
+      "summary": "Interactive Plotly heatmap displaying the posterior covariance matrix of cell type proportions (mu).",
+      "tags": [
+        "visualization",
+        "covariance",
+        "cell-type-proportions",
+        "plotly"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/covariance_mu_data.csv",
+      "type": "file",
+      "name": "covariance_mu_data.csv",
+      "filePath": "efdm_output_mock/covariance_mu_data.csv",
+      "summary": "6x6 covariance matrix CSV for cell type proportions (CT0 through CT5) computed from posterior samples.",
+      "tags": [
+        "covariance",
+        "cell-type-proportions",
+        "matrix",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/effect_age.html",
+      "type": "file",
+      "name": "effect_age.html",
+      "filePath": "efdm_output_mock/effect_age.html",
+      "summary": "Interactive Plotly line plot showing the expected cell type proportions as a function of age across six cell types.",
+      "tags": [
+        "visualization",
+        "age-effect",
+        "cell-type-proportions",
+        "plotly"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/effect_treatment.html",
+      "type": "file",
+      "name": "effect_treatment.html",
+      "filePath": "efdm_output_mock/effect_treatment.html",
+      "summary": "Interactive Plotly line plot showing the expected cell type proportions as a function of treatment across six cell types.",
+      "tags": [
+        "visualization",
+        "treatment-effect",
+        "cell-type-proportions",
+        "plotly"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/posterior_summary.csv",
+      "type": "file",
+      "name": "posterior_summary.csv",
+      "filePath": "efdm_output_mock/posterior_summary.csv",
+      "summary": "Posterior summary table with mean, standard deviation, and quantiles (2.5%, 25%, 50%, 75%, 97.5%) for every model parameter including beta coefficients and random effect standard deviations.",
+      "tags": [
+        "posterior-summary",
+        "quantiles",
+        "parameters",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/rhat_data.csv",
+      "type": "file",
+      "name": "rhat_data.csv",
+      "filePath": "efdm_output_mock/rhat_data.csv",
+      "summary": "Rhat convergence diagnostic values for each of the 27 model parameters, used to assess MCMC chain mixing.",
+      "tags": [
+        "convergence",
+        "rhat",
+        "diagnostics",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/rhat_summary.html",
+      "type": "file",
+      "name": "rhat_summary.html",
+      "filePath": "efdm_output_mock/rhat_summary.html",
+      "summary": "Interactive Plotly bar chart of Rhat values for all model parameters, color-coded by convergence quality with a threshold line at 1.05.",
+      "tags": [
+        "visualization",
+        "convergence",
+        "rhat",
+        "plotly"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/shrinkage.html",
+      "type": "file",
+      "name": "shrinkage.html",
+      "filePath": "efdm_output_mock/shrinkage.html",
+      "summary": "Interactive Plotly bar plot showing shrinkage estimates by parameter block (w, p, aplus, beta) indicating how much each parameter group is pulled toward its prior.",
+      "tags": [
+        "visualization",
+        "shrinkage",
+        "regularization",
+        "plotly"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/shrinkage_data.csv",
+      "type": "file",
+      "name": "shrinkage_data.csv",
+      "filePath": "efdm_output_mock/shrinkage_data.csv",
+      "summary": "Shrinkage estimates per parameter (w, ALR(p), log(aplus), beta) quantifying regularization strength toward prior means.",
+      "tags": [
+        "shrinkage",
+        "regularization",
+        "parameters",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/trace_data.csv",
+      "type": "file",
+      "name": "trace_data.csv",
+      "filePath": "efdm_output_mock/trace_data.csv",
+      "summary": "MCMC trace data with parameter name, iteration number, chain index, and sampled value for all model parameters across multiple chains.",
+      "tags": [
+        "mcmc",
+        "trace",
+        "chains",
+        "data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:efdm_output_mock/trace_log_aplus.html",
+      "type": "file",
+      "name": "trace_log_aplus.html",
+      "filePath": "efdm_output_mock/trace_log_aplus.html",
+      "summary": "Interactive Plotly trace plot displaying the MCMC chain values for log_aplus (log of the EFDM Dirichlet concentration parameter) across 64 iterations from all cold chains, used for convergence diagnostics.",
+      "tags": [
+        "trace-plot",
+        "visualization",
+        "mcmc-diagnostics",
+        "plotly"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/trace_β[1].html",
+      "type": "file",
+      "name": "trace_β[1].html",
+      "filePath": "efdm_output_mock/trace_β[1].html",
+      "summary": "Interactive Plotly trace plot displaying the MCMC chain values for β[1] (first component of the EFDM base measure) across 64 iterations from all cold chains, used for convergence diagnostics.",
+      "tags": [
+        "trace-plot",
+        "visualization",
+        "mcmc-diagnostics",
+        "plotly"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/trace_β[2].html",
+      "type": "file",
+      "name": "trace_β[2].html",
+      "filePath": "efdm_output_mock/trace_β[2].html",
+      "summary": "Interactive Plotly trace plot displaying the MCMC chain values for β[2] (second component of the EFDM base measure) across 64 iterations from all cold chains, used for convergence diagnostics.",
+      "tags": [
+        "trace-plot",
+        "visualization",
+        "mcmc-diagnostics",
+        "plotly"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/trace_β[3].html",
+      "type": "file",
+      "name": "trace_β[3].html",
+      "filePath": "efdm_output_mock/trace_β[3].html",
+      "summary": "Interactive Plotly trace plot displaying the MCMC chain values for β[3] (third component of the EFDM base measure) across 64 iterations from all cold chains, used for convergence diagnostics.",
+      "tags": [
+        "trace-plot",
+        "visualization",
+        "mcmc-diagnostics",
+        "plotly"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:efdm_output_mock/trace_β[4].html",
+      "type": "file",
+      "name": "trace_β[4].html",
+      "filePath": "efdm_output_mock/trace_β[4].html",
+      "summary": "Interactive Plotly trace plot displaying the MCMC chain values for β[4] (fourth component of the EFDM base measure) across 64 iterations from all cold chains, used for convergence diagnostics.",
+      "tags": [
+        "trace-plot",
+        "visualization",
+        "mcmc-diagnostics",
+        "plotly"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:.understand-anything/.understandignore",
+      "type": "file",
+      "name": ".understandignore",
+      "filePath": ".understand-anything/.understandignore",
+      "summary": "Configuration file defining file and directory patterns to exclude from Understand-Anything codebase analysis, with syntax matching .gitignore conventions.",
+      "tags": [
+        "configuration",
+        "ignore-patterns",
+        "analysis-tool"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:data/convergence_test_counts.csv",
+      "type": "file",
+      "name": "convergence_test_counts.csv",
+      "filePath": "data/convergence_test_counts.csv",
+      "summary": "Tabular count data with 200 donor observations across 3 response categories (CT0-CT2), binary treatment, and age covariate, used for convergence testing of the EFDM model.",
+      "tags": [
+        "data",
+        "count-data",
+        "convergence-test"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:data/mock_counts.csv",
+      "type": "file",
+      "name": "mock_counts.csv",
+      "filePath": "data/mock_counts.csv",
+      "summary": "Tabular count data with 80 donor observations across 6 response categories (CT0-CT5), binary treatment, and age covariate, used for EFDM model validation and testing.",
+      "tags": [
+        "data",
+        "count-data",
+        "mock-data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/generate_mock_counts.jl",
+      "type": "file",
+      "name": "generate_mock_counts.jl",
+      "filePath": "scripts/generate_mock_counts.jl",
+      "summary": "Standalone script that generates synthetic multivariate count data from the EFDM data generating process with configurable dimensions and signal strength, for model validation and convergence testing.",
+      "tags": [
+        "data-generation",
+        "simulation",
+        "script",
+        "ground-truth"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:scripts/run_efdm.jl",
+      "type": "file",
+      "name": "run_efdm.jl",
+      "filePath": "scripts/run_efdm.jl",
+      "summary": "Main entry-point runner script that loads configuration and data, builds the EFDM model, runs Pigeons.jl parallel tempering MCMC (optionally with auto-tune loop), and produces convergence diagnostics, posterior summaries, and visualizations.",
+      "tags": [
+        "entry-point",
+        "runner",
+        "script",
+        "mcmc",
+        "pipeline"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/autotune.jl",
+      "type": "file",
+      "name": "autotune.jl",
+      "filePath": "src/autotune.jl",
+      "summary": "Provides variational posterior extraction, shrinkage diagnostics, posterior covariance computation, and an empirical Bayes auto-tune loop that iteratively tunes per-category prior standard deviations to match the data.",
+      "tags": [
+        "auto-tuning",
+        "shrinkage",
+        "covariance",
+        "empirical-bayes",
+        "variational-inference"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/core.jl",
+      "type": "file",
+      "name": "core.jl",
+      "filePath": "src/core.jl",
+      "summary": "Mathematical core of the EFDM model containing pure functions for log-prior density, log-likelihood, parameter unpacking, softmax computation, and synthetic data simulation.",
+      "tags": [
+        "core-math",
+        "log-likelihood",
+        "log-prior",
+        "efdm-model",
+        "pure-functions"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/diagnostics.jl",
+      "type": "file",
+      "name": "diagnostics.jl",
+      "filePath": "src/diagnostics.jl",
+      "summary": "Provides post-sampling convergence diagnostics for the EFDM model, including within-chain Rhat, global barrier extraction, effective sample size computation, parameter name generation, and structured convergence reports.",
+      "tags": [
+        "diagnostics",
+        "convergence",
+        "mcmc",
+        "posterior-summary",
+        "rhat"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/EFDMAnalysis.jl",
+      "type": "file",
+      "name": "EFDMAnalysis.jl",
+      "filePath": "src/EFDMAnalysis.jl",
+      "summary": "Module definition file that declares the EFDMAnalysis Julia module, includes all submodules (core, targets, diagnostics, plotting, autotune), and re-exports their public API.",
+      "tags": [
+        "entry-point",
+        "module",
+        "barrel",
+        "exports"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/plotting.jl",
+      "type": "file",
+      "name": "plotting.jl",
+      "filePath": "src/plotting.jl",
+      "summary": "Comprehensive visualization module producing interactive PlotlyJS plots for posterior distributions, conditional covariate effects, Rhat diagnostics, MCMC trace plots, covariance heatmaps, and shrinkage bar charts.",
+      "tags": [
+        "plotting",
+        "visualization",
+        "diagnostics",
+        "posterior-analysis"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/targets.jl",
+      "type": "file",
+      "name": "targets.jl",
+      "filePath": "src/targets.jl",
+      "summary": "Defines the EFDMLogPotential (log-posterior) and EFDMReference (log-prior) structs implementing the LogDensityProblems.jl interface required by Pigeons.jl for parallel tempering, with ForwardDiff-compatible gradients.",
+      "tags": [
+        "target-distribution",
+        "reference-distribution",
+        "pigeons",
+        "log-density",
+        "bayesian-inference"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/core.jl:efdm_n_params",
+      "type": "function",
+      "name": "efdm_n_params",
+      "filePath": "src/core.jl",
+      "lineRange": [
+        41,
+        43
+      ],
+      "summary": "Computes the total number of unconstrained model parameters given D categories and K covariates, summing regression beta, log-aplus, ALR-transformed p, and logit-transformed w.",
+      "tags": [
+        "utility",
+        "parameter-count",
+        "dimension"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/core.jl:simulate_efdm",
+      "type": "function",
+      "name": "simulate_efdm",
+      "filePath": "src/core.jl",
+      "lineRange": [
+        306,
+        365
+      ],
+      "summary": "Generates synthetic EFDM count data by simulating from the full generative process with Gamma-distributed Dirichlet draws and sequential multinomial allocation, for model validation.",
+      "tags": [
+        "simulation",
+        "data-generation",
+        "testing"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/core.jl:efdm_logprior",
+      "type": "function",
+      "name": "efdm_logprior",
+      "filePath": "src/core.jl",
+      "lineRange": [
+        56,
+        86
+      ],
+      "summary": "Computes the joint log-prior density for the unconstrained parameter vector with independent Normal priors per parameter block, supporting per-category regularization.",
+      "tags": [
+        "log-prior",
+        "regularization",
+        "bayesian-prior"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/core.jl:fill_efdm_prior_sample!",
+      "type": "function",
+      "name": "fill_efdm_prior_sample!",
+      "filePath": "src/core.jl",
+      "lineRange": [
+        103,
+        123
+      ],
+      "summary": "Fills a parameter vector with an i.i.d. draw from the prior distribution, used by Pigeons.jl for replica initialization.",
+      "tags": [
+        "prior-sampling",
+        "initialization",
+        "pigeons"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/core.jl:unpack_efdm",
+      "type": "function",
+      "name": "unpack_efdm",
+      "filePath": "src/core.jl",
+      "lineRange": [
+        145,
+        176
+      ],
+      "summary": "Converts the unconstrained parameter vector into structured EFDM parameters: beta matrix, aplus overdispersion, baseline mixture simplex p, and component weights w_norm.",
+      "tags": [
+        "parameter-unpacking",
+        "transformation",
+        "efdm-model"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/core.jl:unpack_efdm_p!",
+      "type": "function",
+      "name": "unpack_efdm_p!",
+      "filePath": "src/core.jl",
+      "lineRange": [
+        184,
+        195
+      ],
+      "summary": "Fast specialized unpack of only the baseline mixture weights p from the parameter vector into a pre-allocated buffer, used during bimodality diagnostics.",
+      "tags": [
+        "parameter-unpacking",
+        "utility",
+        "diagnostics"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/core.jl:softmax_linear_row!",
+      "type": "function",
+      "name": "softmax_linear_row!",
+      "filePath": "src/core.jl",
+      "lineRange": [
+        207,
+        228
+      ],
+      "summary": "Computes the softmax transformation of a linear predictor x'beta for a single observation using the max-subtraction trick for numerical stability.",
+      "tags": [
+        "softmax",
+        "linear-predictor",
+        "utility",
+        "numerical-stability"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/core.jl:efdm_loglik_obs",
+      "type": "function",
+      "name": "efdm_loglik_obs",
+      "filePath": "src/core.jl",
+      "lineRange": [
+        248,
+        293
+      ],
+      "summary": "Computes the log-likelihood of a single multinomial observation under the EFDM mixture model using log-sum-exp for numerical stability.",
+      "tags": [
+        "log-likelihood",
+        "efdm-model",
+        "numerical-stability",
+        "mixture-model"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:src/targets.jl:EFDMLogPotential",
+      "type": "class",
+      "name": "EFDMLogPotential",
+      "filePath": "src/targets.jl",
+      "lineRange": [
+        30,
+        106
+      ],
+      "summary": "Log-posterior density struct implementing the LogDensityProblems.jl interface for Pigeons.jl, computing the unnormalized EFDM log-posterior with ForwardDiff-compatible gradient support.",
+      "tags": [
+        "target-distribution",
+        "log-posterior",
+        "pigeons",
+        "automatic-differentiation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:src/targets.jl:EFDMReference",
+      "type": "class",
+      "name": "EFDMReference",
+      "filePath": "src/targets.jl",
+      "lineRange": [
+        116,
+        158
+      ],
+      "summary": "Prior log-density struct implementing the LogDensityProblems.jl interface for Pigeons.jl, serving as the reference distribution in the parallel tempering ladder.",
+      "tags": [
+        "reference-distribution",
+        "log-prior",
+        "pigeons"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:src/diagnostics.jl:ConvergenceSummary",
+      "type": "class",
+      "name": "ConvergenceSummary",
+      "filePath": "src/diagnostics.jl",
+      "lineRange": [
+        14,
+        24
+      ],
+      "summary": "Dataclass holding key convergence diagnostics from an EFDM PT run: global barrier Lambda, tempered restarts, round trips, max Rhat, min ESS, and model dimensions.",
+      "tags": [
+        "diagnostics",
+        "convergence",
+        "data-structure"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/diagnostics.jl:within_chain_rhat",
+      "type": "function",
+      "name": "within_chain_rhat",
+      "filePath": "src/diagnostics.jl",
+      "lineRange": [
+        35,
+        61
+      ],
+      "summary": "Computes the within-chain Rhat statistic by splitting a single MCMC chain into four segments and applying the Gelman-Rubin statistic, appropriate for PT output with only one cold chain.",
+      "tags": [
+        "diagnostics",
+        "rhat",
+        "convergence",
+        "mcmc"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/diagnostics.jl:extract_target_chain_indices",
+      "type": "function",
+      "name": "extract_target_chain_indices",
+      "filePath": "src/diagnostics.jl",
+      "lineRange": [
+        76,
+        111
+      ],
+      "summary": "Identifies the cold chain index in a Pigeons.jl PT output handling both standard and variational PT ladders, selecting the fixed-leg cold chain at temperature 1.0.",
+      "tags": [
+        "utility",
+        "pigeons",
+        "chain-extraction"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/diagnostics.jl:extract_parameter_draws",
+      "type": "function",
+      "name": "extract_parameter_draws",
+      "filePath": "src/diagnostics.jl",
+      "lineRange": [
+        123,
+        135
+      ],
+      "summary": "Pools MCMC draws for a single parameter across multiple cold chains into a flat Float64 vector.",
+      "tags": [
+        "utility",
+        "chain-extraction",
+        "posterior"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/diagnostics.jl:convergence_summary",
+      "type": "function",
+      "name": "convergence_summary",
+      "filePath": "src/diagnostics.jl",
+      "lineRange": [
+        156,
+        207
+      ],
+      "summary": "Computes all key convergence diagnostics from a Pigeons.jl PT result including global barrier, tempered restarts, within-chain Rhat, and effective sample size.",
+      "tags": [
+        "diagnostics",
+        "convergence",
+        "pigeons",
+        "mcmc"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/diagnostics.jl:convergence_assessment",
+      "type": "function",
+      "name": "convergence_assessment",
+      "filePath": "src/diagnostics.jl",
+      "lineRange": [
+        220,
+        236
+      ],
+      "summary": "Classifies convergence quality as converged, partial, or failed based on threshold rules for barrier, tempered restarts, Rhat, and ESS.",
+      "tags": [
+        "diagnostics",
+        "convergence",
+        "classification"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/diagnostics.jl:convergence_report_str",
+      "type": "function",
+      "name": "convergence_report_str",
+      "filePath": "src/diagnostics.jl",
+      "lineRange": [
+        244,
+        281
+      ],
+      "summary": "Formats a structured convergence report string with the three-numbers summary and convergence assessment suitable for stdout.",
+      "tags": [
+        "diagnostics",
+        "reporting",
+        "convergence"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/diagnostics.jl:posterior_summary_table",
+      "type": "function",
+      "name": "posterior_summary_table",
+      "filePath": "src/diagnostics.jl",
+      "lineRange": [
+        292,
+        310
+      ],
+      "summary": "Builds a DataFrame with posterior mean, standard deviation, and quantiles for every model parameter from MCMC samples.",
+      "tags": [
+        "diagnostics",
+        "posterior",
+        "summary"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/diagnostics.jl:swap_acceptance_matrix",
+      "type": "function",
+      "name": "swap_acceptance_matrix",
+      "filePath": "src/diagnostics.jl",
+      "lineRange": [
+        321,
+        334
+      ],
+      "summary": "Attempts to extract swap acceptance probabilities between adjacent temperature rungs from the Pigeons PT result using multiple fallback strategies.",
+      "tags": [
+        "diagnostics",
+        "swap",
+        "acceptance",
+        "pigeons"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/diagnostics.jl:generate_param_names",
+      "type": "function",
+      "name": "generate_param_names",
+      "filePath": "src/diagnostics.jl",
+      "lineRange": [
+        348,
+        366
+      ],
+      "summary": "Generates descriptive parameter names for the EFDM model dimensions including beta, log-aplus, p, and w.",
+      "tags": [
+        "utility",
+        "parameter-naming"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/autotune.jl:extract_variational_parameters",
+      "type": "function",
+      "name": "extract_variational_parameters",
+      "filePath": "src/autotune.jl",
+      "lineRange": [
+        33,
+        77
+      ],
+      "summary": "Extracts the mean vector and precision matrix from the GaussianReference distribution fitted during Pigeons PT, trying multiple access paths for version compatibility.",
+      "tags": [
+        "variational-inference",
+        "parameter-extraction",
+        "pigeons"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/autotune.jl:sample_variational_posterior",
+      "type": "function",
+      "name": "sample_variational_posterior",
+      "filePath": "src/autotune.jl",
+      "lineRange": [
+        87,
+        108
+      ],
+      "summary": "Draws samples from the variational posterior Gaussian approximation, falling back to actual PT samples if variational parameters are unavailable.",
+      "tags": [
+        "variational-inference",
+        "sampling",
+        "posterior"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/autotune.jl:shrinkage_report",
+      "type": "function",
+      "name": "shrinkage_report",
+      "filePath": "src/autotune.jl",
+      "lineRange": [
+        142,
+        186
+      ],
+      "summary": "Computes per-element shrinkage factors for every EFDM parameter block, measuring how much the posterior variance shrinks relative to the prior variance.",
+      "tags": [
+        "shrinkage",
+        "regularization",
+        "diagnostics"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/autotune.jl:shrinkage_report_str",
+      "type": "function",
+      "name": "shrinkage_report_str",
+      "filePath": "src/autotune.jl",
+      "lineRange": [
+        193,
+        231
+      ],
+      "summary": "Formats the shrinkage analysis as a readable string with per-category breakdown and warnings for parameters where the prior dominates.",
+      "tags": [
+        "shrinkage",
+        "reporting",
+        "diagnostics"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/autotune.jl:auto_tune_round",
+      "type": "function",
+      "name": "auto_tune_round",
+      "filePath": "src/autotune.jl",
+      "lineRange": [
+        391,
+        424
+      ],
+      "summary": "Extracts posterior marginal standard deviations from a completed PT run and computes updated per-category prior SDs by applying an inflation factor to prevent overfitting.",
+      "tags": [
+        "auto-tuning",
+        "prior-adaptation",
+        "empirical-bayes"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/autotune.jl:auto_tune_report_str",
+      "type": "function",
+      "name": "auto_tune_report_str",
+      "filePath": "src/autotune.jl",
+      "lineRange": [
+        431,
+        446
+      ],
+      "summary": "Formats the results of an auto-tune round showing new per-category prior standard deviations for ALR(p) and logit(w) parameters.",
+      "tags": [
+        "auto-tuning",
+        "reporting"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/autotune.jl:run_auto_tune",
+      "type": "function",
+      "name": "run_auto_tune",
+      "filePath": "src/autotune.jl",
+      "lineRange": [
+        472,
+        545
+      ],
+      "summary": "Orchestrates the full empirical Bayes auto-tune loop: sequentially runs PT rounds with updated per-category priors, computes diagnostics, generates per-round plots, and produces a final run with tuned SDs.",
+      "tags": [
+        "auto-tuning",
+        "empirical-bayes",
+        "mcmc",
+        "pipeline"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/autotune.jl:posterior_logit_w_covariance",
+      "type": "function",
+      "name": "posterior_logit_w_covariance",
+      "filePath": "src/autotune.jl",
+      "lineRange": [
+        243,
+        261
+      ],
+      "summary": "Computes the D-by-D posterior covariance matrix of logit-transformed component weights w from pooled cold-chain MCMC draws.",
+      "tags": [
+        "covariance",
+        "component-weights",
+        "posterior"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/autotune.jl:posterior_alr_p_covariance",
+      "type": "function",
+      "name": "posterior_alr_p_covariance",
+      "filePath": "src/autotune.jl",
+      "lineRange": [
+        270,
+        287
+      ],
+      "summary": "Computes the (D-1)-by-(D-1) posterior covariance matrix of ALR-transformed baseline mixture weights.",
+      "tags": [
+        "covariance",
+        "baseline-weights",
+        "posterior"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/autotune.jl:posterior_mu_covariance",
+      "type": "function",
+      "name": "posterior_mu_covariance",
+      "filePath": "src/autotune.jl",
+      "lineRange": [
+        301,
+        330
+      ],
+      "summary": "Computes the D-by-D posterior covariance of expected proportions mu equals softmax(X beta) using a random subsample of posterior draws.",
+      "tags": [
+        "covariance",
+        "expected-proportions",
+        "posterior",
+        "compositional"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/autotune.jl:posterior_mu_covariance_cond",
+      "type": "function",
+      "name": "posterior_mu_covariance_cond",
+      "filePath": "src/autotune.jl",
+      "lineRange": [
+        342,
+        373
+      ],
+      "summary": "Computes posterior covariance of expected proportions conditioned on specific covariate values either at column means or a user-provided row.",
+      "tags": [
+        "covariance",
+        "expected-proportions",
+        "conditional",
+        "posterior"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/plotting.jl:_maybe_plotly",
+      "type": "function",
+      "name": "_maybe_plotly",
+      "filePath": "src/plotting.jl",
+      "lineRange": [
+        26,
+        36
+      ],
+      "summary": "Conditionally saves a PlotlyJS figure to HTML or prints a message instructing the user to install PlotlyJS.",
+      "tags": [
+        "plotting",
+        "utility",
+        "conditional"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/plotting.jl:plot_aplus_posterior",
+      "type": "function",
+      "name": "plot_aplus_posterior",
+      "filePath": "src/plotting.jl",
+      "lineRange": [
+        43,
+        92
+      ],
+      "summary": "Generates a histogram of aplus overdispersion posterior draws with mean, median, and 95% credible interval annotations, saved as HTML or CSV.",
+      "tags": [
+        "plotting",
+        "posterior",
+        "overdispersion"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/plotting.jl:plot_conditional_effects",
+      "type": "function",
+      "name": "plot_conditional_effects",
+      "filePath": "src/plotting.jl",
+      "lineRange": [
+        110,
+        203
+      ],
+      "summary": "Plots expected cell-type proportions as functions of each continuous covariate holding others at their mean, using posterior mean parameter estimates.",
+      "tags": [
+        "plotting",
+        "conditional-effects",
+        "covariates"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/plotting.jl:plot_rhat_summary",
+      "type": "function",
+      "name": "plot_rhat_summary",
+      "filePath": "src/plotting.jl",
+      "lineRange": [
+        212,
+        264
+      ],
+      "summary": "Creates an ordered bar chart of Rhat values with a reference line at 1.05, using within-chain Rhat on the fixed-leg cold chain to avoid inflation from hot chains.",
+      "tags": [
+        "plotting",
+        "rhat",
+        "convergence",
+        "diagnostics"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/plotting.jl:plot_traces",
+      "type": "function",
+      "name": "plot_traces",
+      "filePath": "src/plotting.jl",
+      "lineRange": [
+        276,
+        324
+      ],
+      "summary": "Generates trace plots for selected parameters showing iteration values across all cold chains, one subplot per parameter.",
+      "tags": [
+        "plotting",
+        "trace",
+        "mcmc",
+        "diagnostics"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/plotting.jl:plot_all_diagnostics",
+      "type": "function",
+      "name": "plot_all_diagnostics",
+      "filePath": "src/plotting.jl",
+      "lineRange": [
+        335,
+        376
+      ],
+      "summary": "Convenience function running all diagnostic plots: convergence report, posterior summary, aplus histogram, conditional effects, Rhat summary, and key parameter traces.",
+      "tags": [
+        "plotting",
+        "diagnostics",
+        "convenience"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/plotting.jl:plot_covariance_heatmap",
+      "type": "function",
+      "name": "plot_covariance_heatmap",
+      "filePath": "src/plotting.jl",
+      "lineRange": [
+        394,
+        457
+      ],
+      "summary": "Plots a covariance matrix as a diverging-color heatmap with rows and columns reordered by the leading eigenvector for visual grouping, using dynamic decimal precision.",
+      "tags": [
+        "plotting",
+        "covariance",
+        "heatmap"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/plotting.jl:plot_shrinkage_barchart",
+      "type": "function",
+      "name": "plot_shrinkage_barchart",
+      "filePath": "src/plotting.jl",
+      "lineRange": [
+        469,
+        538
+      ],
+      "summary": "Creates a grouped bar chart of shrinkage factors per parameter block with color-coded highlights for prior-dominated and data-dominated categories.",
+      "tags": [
+        "plotting",
+        "shrinkage",
+        "regularization"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/plotting.jl:plot_all_covariances",
+      "type": "function",
+      "name": "plot_all_covariances",
+      "filePath": "src/plotting.jl",
+      "lineRange": [
+        553,
+        592
+      ],
+      "summary": "Computes and plots all three posterior covariance matrices: logit-w, ALR-p, and expected proportion mu, plus the mu correlation matrix.",
+      "tags": [
+        "plotting",
+        "covariance",
+        "posterior",
+        "pipeline"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/generate_mock_counts.jl:generating_params",
+      "type": "function",
+      "name": "generating_params",
+      "filePath": "scripts/generate_mock_counts.jl",
+      "lineRange": [
+        87,
+        130
+      ],
+      "summary": "Returns the ground-truth generating parameters for mock data supporting 3, 4, or 6 response categories with configurable signal scale for model validation.",
+      "tags": [
+        "data-generation",
+        "ground-truth",
+        "parameters"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/generate_mock_counts.jl:make_mock_df",
+      "type": "function",
+      "name": "make_mock_df",
+      "filePath": "scripts/generate_mock_counts.jl",
+      "lineRange": [
+        142,
+        192
+      ],
+      "summary": "Generates a full mock donor-level count DataFrame by sampling from the Dirichlet-Multinomial distribution with covariate-informed compositions and per-category mixture weights.",
+      "tags": [
+        "data-generation",
+        "dirichlet-multinomial",
+        "simulation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/generate_mock_counts.jl:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/generate_mock_counts.jl",
+      "lineRange": [
+        194,
+        219
+      ],
+      "summary": "Entry point that parses CLI arguments for output path, sample size, seed, categories, and signal scale, generates mock data, writes CSV, and prints parameter summary.",
+      "tags": [
+        "entry-point",
+        "cli",
+        "data-generation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/run_efdm.jl:parse_sd",
+      "type": "function",
+      "name": "parse_sd",
+      "filePath": "scripts/run_efdm.jl",
+      "lineRange": [
+        126,
+        135
+      ],
+      "summary": "Parses prior SD configuration as either a scalar broadcast to expected length or a per-element vector, with validation.",
+      "tags": [
+        "utility",
+        "configuration",
+        "parsing"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:README.md",
+      "target": "config:Project.toml",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "config:my_config.toml",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:Project.toml",
+      "target": "config:my_config.toml",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:config/convergence_test_config.toml",
+      "target": "file:scripts/run_efdm.jl",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:config/mock_model_config.toml",
+      "target": "file:scripts/run_efdm.jl",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:config/model_config.toml",
+      "target": "file:scripts/run_efdm.jl",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:config/convergence_test_config.toml",
+      "target": "config:config/model_config.toml",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:config/mock_model_config.toml",
+      "target": "config:config/model_config.toml",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:config/convergence_test_config.toml",
+      "target": "config:config/mock_model_config.toml",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:efdm_output_mock/aplus_posterior.html",
+      "target": "file:efdm_output_mock/aplus_posterior_data.csv",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:efdm_output_mock/correlation_mu.html",
+      "target": "file:efdm_output_mock/correlation_mu_data.csv",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:efdm_output_mock/covariance_alr_p.html",
+      "target": "file:efdm_output_mock/covariance_alr_p_data.csv",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:efdm_output_mock/covariance_logit_w.html",
+      "target": "file:efdm_output_mock/covariance_logit_w_data.csv",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:efdm_output_mock/covariance_mu.html",
+      "target": "file:efdm_output_mock/covariance_mu_data.csv",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:efdm_output_mock/effect_age.html",
+      "target": "file:efdm_output_mock/conditional_effects_data.csv",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:efdm_output_mock/effect_treatment.html",
+      "target": "file:efdm_output_mock/conditional_effects_data.csv",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:efdm_output_mock/rhat_summary.html",
+      "target": "file:efdm_output_mock/rhat_data.csv",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:efdm_output_mock/shrinkage.html",
+      "target": "file:efdm_output_mock/shrinkage_data.csv",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:efdm_output_mock/convergence_report.txt",
+      "target": "file:efdm_output_mock/posterior_summary.csv",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:efdm_output_mock/convergence_report.txt",
+      "target": "file:efdm_output_mock/trace_data.csv",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:efdm_output_mock/convergence_report.txt",
+      "target": "file:efdm_output_mock/rhat_data.csv",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:efdm_output_mock/posterior_summary.csv",
+      "target": "file:efdm_output_mock/trace_data.csv",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/core.jl",
+      "target": "function:src/core.jl:efdm_n_params",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/core.jl",
+      "target": "function:src/core.jl:simulate_efdm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/core.jl",
+      "target": "function:src/core.jl:efdm_logprior",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/core.jl",
+      "target": "function:src/core.jl:fill_efdm_prior_sample!",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/core.jl",
+      "target": "function:src/core.jl:unpack_efdm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/core.jl",
+      "target": "function:src/core.jl:unpack_efdm_p!",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/core.jl",
+      "target": "function:src/core.jl:softmax_linear_row!",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/core.jl",
+      "target": "function:src/core.jl:efdm_loglik_obs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/targets.jl",
+      "target": "class:src/targets.jl:EFDMLogPotential",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/targets.jl",
+      "target": "class:src/targets.jl:EFDMReference",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/diagnostics.jl",
+      "target": "class:src/diagnostics.jl:ConvergenceSummary",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/diagnostics.jl",
+      "target": "function:src/diagnostics.jl:within_chain_rhat",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/diagnostics.jl",
+      "target": "function:src/diagnostics.jl:extract_target_chain_indices",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/diagnostics.jl",
+      "target": "function:src/diagnostics.jl:extract_parameter_draws",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/diagnostics.jl",
+      "target": "function:src/diagnostics.jl:convergence_summary",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/diagnostics.jl",
+      "target": "function:src/diagnostics.jl:convergence_assessment",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/diagnostics.jl",
+      "target": "function:src/diagnostics.jl:convergence_report_str",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/diagnostics.jl",
+      "target": "function:src/diagnostics.jl:posterior_summary_table",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/diagnostics.jl",
+      "target": "function:src/diagnostics.jl:swap_acceptance_matrix",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/diagnostics.jl",
+      "target": "function:src/diagnostics.jl:generate_param_names",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/autotune.jl",
+      "target": "function:src/autotune.jl:extract_variational_parameters",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/autotune.jl",
+      "target": "function:src/autotune.jl:sample_variational_posterior",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/autotune.jl",
+      "target": "function:src/autotune.jl:shrinkage_report",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/autotune.jl",
+      "target": "function:src/autotune.jl:shrinkage_report_str",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/autotune.jl",
+      "target": "function:src/autotune.jl:auto_tune_round",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/autotune.jl",
+      "target": "function:src/autotune.jl:auto_tune_report_str",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/autotune.jl",
+      "target": "function:src/autotune.jl:run_auto_tune",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/autotune.jl",
+      "target": "function:src/autotune.jl:posterior_logit_w_covariance",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/autotune.jl",
+      "target": "function:src/autotune.jl:posterior_alr_p_covariance",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/autotune.jl",
+      "target": "function:src/autotune.jl:posterior_mu_covariance",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/autotune.jl",
+      "target": "function:src/autotune.jl:posterior_mu_covariance_cond",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/plotting.jl",
+      "target": "function:src/plotting.jl:_maybe_plotly",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/plotting.jl",
+      "target": "function:src/plotting.jl:plot_aplus_posterior",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/plotting.jl",
+      "target": "function:src/plotting.jl:plot_conditional_effects",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/plotting.jl",
+      "target": "function:src/plotting.jl:plot_rhat_summary",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/plotting.jl",
+      "target": "function:src/plotting.jl:plot_traces",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/plotting.jl",
+      "target": "function:src/plotting.jl:plot_all_diagnostics",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/plotting.jl",
+      "target": "function:src/plotting.jl:plot_covariance_heatmap",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/plotting.jl",
+      "target": "function:src/plotting.jl:plot_shrinkage_barchart",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/plotting.jl",
+      "target": "function:src/plotting.jl:plot_all_covariances",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/generate_mock_counts.jl",
+      "target": "function:scripts/generate_mock_counts.jl:generating_params",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/generate_mock_counts.jl",
+      "target": "function:scripts/generate_mock_counts.jl:make_mock_df",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/generate_mock_counts.jl",
+      "target": "function:scripts/generate_mock_counts.jl:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/run_efdm.jl",
+      "target": "function:scripts/run_efdm.jl:parse_sd",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/core.jl",
+      "target": "function:src/core.jl:efdm_n_params",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/core.jl",
+      "target": "function:src/core.jl:simulate_efdm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/targets.jl",
+      "target": "class:src/targets.jl:EFDMLogPotential",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/targets.jl",
+      "target": "class:src/targets.jl:EFDMReference",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/diagnostics.jl",
+      "target": "class:src/diagnostics.jl:ConvergenceSummary",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/diagnostics.jl",
+      "target": "function:src/diagnostics.jl:convergence_summary",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/diagnostics.jl",
+      "target": "function:src/diagnostics.jl:convergence_assessment",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/diagnostics.jl",
+      "target": "function:src/diagnostics.jl:convergence_report_str",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/diagnostics.jl",
+      "target": "function:src/diagnostics.jl:extract_target_chain_indices",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/diagnostics.jl",
+      "target": "function:src/diagnostics.jl:extract_parameter_draws",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/diagnostics.jl",
+      "target": "function:src/diagnostics.jl:generate_param_names",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/diagnostics.jl",
+      "target": "function:src/diagnostics.jl:posterior_summary_table",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/autotune.jl",
+      "target": "function:src/autotune.jl:shrinkage_report",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/autotune.jl",
+      "target": "function:src/autotune.jl:shrinkage_report_str",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/autotune.jl",
+      "target": "function:src/autotune.jl:posterior_logit_w_covariance",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/autotune.jl",
+      "target": "function:src/autotune.jl:posterior_alr_p_covariance",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/autotune.jl",
+      "target": "function:src/autotune.jl:posterior_mu_covariance",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/autotune.jl",
+      "target": "function:src/autotune.jl:posterior_mu_covariance_cond",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/autotune.jl",
+      "target": "function:src/autotune.jl:auto_tune_round",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/autotune.jl",
+      "target": "function:src/autotune.jl:run_auto_tune",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/plotting.jl",
+      "target": "function:src/plotting.jl:plot_covariance_heatmap",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/plotting.jl",
+      "target": "function:src/plotting.jl:plot_shrinkage_barchart",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/plotting.jl",
+      "target": "function:src/plotting.jl:plot_all_covariances",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/plotting.jl",
+      "target": "function:src/plotting.jl:plot_aplus_posterior",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/plotting.jl",
+      "target": "function:src/plotting.jl:plot_conditional_effects",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/plotting.jl",
+      "target": "function:src/plotting.jl:plot_rhat_summary",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/plotting.jl",
+      "target": "function:src/plotting.jl:plot_traces",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/EFDMAnalysis.jl",
+      "target": "file:src/core.jl",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:src/EFDMAnalysis.jl",
+      "target": "file:src/targets.jl",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:src/EFDMAnalysis.jl",
+      "target": "file:src/diagnostics.jl",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:src/EFDMAnalysis.jl",
+      "target": "file:src/plotting.jl",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:src/EFDMAnalysis.jl",
+      "target": "file:src/autotune.jl",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:scripts/run_efdm.jl",
+      "target": "file:src/EFDMAnalysis.jl",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:scripts/run_efdm.jl",
+      "target": "file:data/convergence_test_counts.csv",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:scripts/run_efdm.jl",
+      "target": "file:data/mock_counts.csv",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:scripts/generate_mock_counts.jl",
+      "target": "file:data/mock_counts.csv",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer:entry",
+      "name": "Module Entry",
+      "description": "Julia module entry point that includes and re-exports all submodules for the EFDM analysis pipeline",
+      "nodeIds": [
+        "file:src/EFDMAnalysis.jl"
+      ]
+    },
+    {
+      "id": "layer:core",
+      "name": "Model Core",
+      "description": "Pure EFDM mathematical foundations including log-prior, log-likelihood, parameter transforms, Pigeons.jl target/reference distribution wrappers, and empirical Bayes auto-tuning",
+      "nodeIds": [
+        "file:src/core.jl",
+        "file:src/targets.jl",
+        "file:src/autotune.jl"
+      ]
+    },
+    {
+      "id": "layer:analysis",
+      "name": "Analysis and Visualization",
+      "description": "Post-MCMC convergence diagnostics (Rhat, ESS, parameter extraction) and plotting and visualization (histograms, conditional effects, covariance heatmaps, traces)",
+      "nodeIds": [
+        "file:src/diagnostics.jl",
+        "file:src/plotting.jl"
+      ]
+    },
+    {
+      "id": "layer:scripts",
+      "name": "Run Scripts",
+      "description": "Executable entry points for synthetic data generation and running the full EFDM parallel tempering pipeline",
+      "nodeIds": [
+        "file:scripts/generate_mock_counts.jl",
+        "file:scripts/run_efdm.jl"
+      ]
+    },
+    {
+      "id": "layer:data",
+      "name": "Data",
+      "description": "Synthetic input count data files used for smoke testing and convergence testing of the EFDM model",
+      "nodeIds": [
+        "file:data/convergence_test_counts.csv",
+        "file:data/mock_counts.csv"
+      ]
+    },
+    {
+      "id": "layer:configuration",
+      "name": "Configuration",
+      "description": "Julia dependency manifests, runtime EFDM model configuration, and test-specific config overrides for the EFDM pipeline",
+      "nodeIds": [
+        "config:Manifest.toml",
+        "config:Project.toml",
+        "config:my_config.toml",
+        "config:config/convergence_test_config.toml",
+        "config:config/mock_model_config.toml",
+        "config:config/model_config.toml"
+      ]
+    },
+    {
+      "id": "layer:documentation",
+      "name": "Documentation",
+      "description": "Project-level README covering EFDM model installation, parameter documentation, convergence guidance, and API usage",
+      "nodeIds": [
+        "document:README.md"
+      ]
+    },
+    {
+      "id": "layer:output",
+      "name": "Mock Output Artifacts",
+      "description": "Generated diagnostic outputs from mock data analysis runs: interactive Plotly HTML visualizations (posterior histograms, trace plots, covariance/correlation heatmaps, conditional effects), supporting CSV data files, and convergence diagnostics report",
+      "nodeIds": [
+        "file:efdm_output_mock/aplus_posterior.html",
+        "file:efdm_output_mock/aplus_posterior_data.csv",
+        "file:efdm_output_mock/conditional_effects_data.csv",
+        "document:efdm_output_mock/convergence_report.txt",
+        "file:efdm_output_mock/correlation_mu.html",
+        "file:efdm_output_mock/correlation_mu_data.csv",
+        "file:efdm_output_mock/covariance_alr_p.html",
+        "file:efdm_output_mock/covariance_alr_p_data.csv",
+        "file:efdm_output_mock/covariance_logit_w.html",
+        "file:efdm_output_mock/covariance_logit_w_data.csv",
+        "file:efdm_output_mock/covariance_mu.html",
+        "file:efdm_output_mock/covariance_mu_data.csv",
+        "file:efdm_output_mock/effect_age.html",
+        "file:efdm_output_mock/effect_treatment.html",
+        "file:efdm_output_mock/posterior_summary.csv",
+        "file:efdm_output_mock/rhat_data.csv",
+        "file:efdm_output_mock/rhat_summary.html",
+        "file:efdm_output_mock/shrinkage.html",
+        "file:efdm_output_mock/shrinkage_data.csv",
+        "file:efdm_output_mock/trace_data.csv",
+        "file:efdm_output_mock/trace_log_aplus.html",
+        "file:efdm_output_mock/trace_β[1].html",
+        "file:efdm_output_mock/trace_β[2].html",
+        "file:efdm_output_mock/trace_β[3].html",
+        "file:efdm_output_mock/trace_β[4].html"
+      ]
+    },
+    {
+      "id": "layer:meta",
+      "name": "Meta Configuration",
+      "description": "Project-level tooling configuration files for the understand-anything analysis framework",
+      "nodeIds": [
+        "file:.understand-anything/.understandignore"
+      ]
+    }
+  ],
+  "tour": [
+    {
+      "order": 1,
+      "title": "Project Overview",
+      "description": "Start with the README to understand the project's purpose: Bayesian analysis of multivariate count data using the Extended Flexible Dirichlet Multinomial (EFDM) model with Parallel Tempering via Pigeons.jl. The README walks through installation, data format expectations, model parameters, and the quick-start workflow — copy a config template, edit it, and run the pipeline. This document provides the roadmap for the entire tour and mirrors the narrative structure we will follow through the code.",
+      "nodeIds": [
+        "document:README.md"
+      ]
+    },
+    {
+      "order": 2,
+      "title": "Package Dependencies",
+      "description": "Project.toml defines the EFDMAnalysis Julia package: its name, UUID, version, and 13 direct dependencies including Pigeons.jl (parallel tempering MCMC), Distributions.jl (probability distributions for the EFDM likelihood), and MCMCChains.jl (posterior summarization). This file establishes the computational foundation — every analysis run depends on this dependency graph being resolved correctly.",
+      "nodeIds": [
+        "config:Project.toml"
+      ],
+      "languageLesson": "Julia's Project.toml follows a standard TOML format. The [deps] section lists direct dependencies with UUIDs, while [compat] constrains allowed version ranges (e.g., '≥ 0.9' means 0.9.x but not 1.0 breaking changes). The Manifest.toml (auto-generated) pins exact transitive dependency versions for reproducibility."
+    },
+    {
+      "order": 3,
+      "title": "Model Configuration",
+      "description": "The master config template (config/model_config.toml) is the first thing the README tells you to copy. It contains eight sections: data paths, response and covariate column mappings, prior hyperparameters for the EFDM regression coefficients, MCMC sampler settings (number of chains, iterations, temperature schedule), and auto-tune parameters for empirical Bayes regularization. The user-specific my_config.toml overrides these defaults for a particular analysis run. Understanding this file is essential because every parameter here directly shapes the statistical model and the MCMC inference.",
+      "nodeIds": [
+        "config:config/model_config.toml",
+        "config:my_config.toml"
+      ],
+      "languageLesson": "TOML is Julia's native configuration format. Sections like [data] and [priors] group related parameters. Tables of arrays ([[array_of_tables]]) allow repeated structured entries. Inline tables provide compact key-value pairs within a single line."
+    },
+    {
+      "order": 4,
+      "title": "Main Pipeline Runner",
+      "description": "scripts/run_efdm.jl is the entry point the user actually invokes. It loads the configuration TOML, reads the CSV data, constructs the design matrix, instantiates the EFDM model, runs parallel tempering MCMC via Pigeons.jl, then produces convergence diagnostics and plots. This script is the conductor that orchestrates every module in the src/ directory — follow its execution order to understand how the pieces connect.",
+      "nodeIds": [
+        "file:scripts/run_efdm.jl"
+      ]
+    },
+    {
+      "order": 5,
+      "title": "Module Entry Point",
+      "description": "src/EFDMAnalysis.jl is the Julia module declaration that includes and re-exports all five submodules: core.jl (EFDM math), targets.jl (Pigeons.jl integration), diagnostics.jl (convergence analysis), plotting.jl (visualization), and autotune.jl (empirical Bayes). It does no computation itself — it is purely organizational, creating a clean public API surface that scripts/run_efdm.jl uses via 'using EFDMAnalysis'. This is the standard Julia package entry point pattern.",
+      "nodeIds": [
+        "file:src/EFDMAnalysis.jl"
+      ],
+      "languageLesson": "Julia modules use 'include()' to load source files in dependency order and 'export' to declare the public API. The 'module ... end' block creates a new namespace. Consumers access exported symbols with 'using ModuleName' or qualified access with 'ModuleName.function'."
+    },
+    {
+      "order": 6,
+      "title": "EFDM Statistical Core",
+      "description": "src/core.jl is the mathematical heart of the project. It implements the pure EFDM model: the log-prior density for the regression coefficients, the log-likelihood for multivariate count data, parameter transformations (e.g., from unconstrained to simplex-constrained space), and data simulation routines. Every other module depends on these functions — the targets module wraps them for Pigeons.jl, and the diagnostics module extracts posterior summaries of these same parameters.",
+      "nodeIds": [
+        "file:src/core.jl"
+      ]
+    },
+    {
+      "order": 7,
+      "title": "Pigeons.jl Target Integration",
+      "description": "src/targets.jl bridges the pure EFDM math from core.jl to the Parallel Tempering engine. It defines two key Pigeons.jl interfaces: EFDMLogPotential (the target distribution, i.e., the log-posterior that the MCMC sampler explores) and EFDMReference (the reference distribution used for tempered bridging between temperatures). This file is the adapter layer that lets Pigeons.jl sample from the EFDM posterior without knowing anything about the EFDM model itself.",
+      "nodeIds": [
+        "file:src/targets.jl"
+      ],
+      "languageLesson": "Pigeons.jl separates 'target' (the unnormalized posterior) from 'reference' (a tractable distribution for importance weighting across temperature levels). The target provides log_potential() and the reference provides sample() and log_potential(). This pattern enables the parallel tempering algorithm to gradually interpolate between an easy-to-sample reference and the complex target posterior."
+    },
+    {
+      "order": 8,
+      "title": "Empirical Bayes Auto-Tuning",
+      "description": "src/autotune.jl implements an empirical Bayes approach to regularize prior hyperparameters based on the data. After an initial MCMC run, it extracts the posterior covariance of the regression coefficients and uses it to tighten the priors for subsequent runs. This iterative refinement helps the sampler explore more efficiently in high-dimensional parameter spaces — a practical necessity given the large number of cell-type categories that EFDM models simultaneously.",
+      "nodeIds": [
+        "file:src/autotune.jl"
+      ]
+    },
+    {
+      "order": 9,
+      "title": "Convergence Diagnostics",
+      "description": "src/diagnostics.jl analyzes the MCMC output to assess whether the chains have converged. It computes the Gelman-Rubin Rhat statistic (comparing between-chain and within-chain variance), effective sample size (ESS), extracts posterior summaries (mean, credible intervals), and generates convergence reports. This is the quality assurance step — without proper convergence, the posterior estimates from Step 6 are unreliable. The diagnostics module is what the pipeline runner calls immediately after sampling completes.",
+      "nodeIds": [
+        "file:src/diagnostics.jl"
+      ]
+    },
+    {
+      "order": 10,
+      "title": "Posterior Visualization",
+      "description": "src/plotting.jl transforms the numerical posterior samples into interpretable visualizations: trace plots to inspect MCMC mixing, histograms of marginal posterior distributions, conditional effects plots showing how covariates shift cell-type proportions, and covariance heatmaps revealing correlations between regression coefficients. These plots are the primary way users communicate their findings and validate that the model's behavior is sensible.",
+      "nodeIds": [
+        "file:src/plotting.jl"
+      ]
+    },
+    {
+      "order": 11,
+      "title": "Synthetic Test Data",
+      "description": "The data/ directory contains pre-generated synthetic count datasets: mock_counts.csv (80 donors, 6 cell types) for quick smoke testing, and convergence_test_counts.csv (200 donors, 6 cell types) with known biased proportions for convergence validation. These files serve as reproducible test fixtures — they let you verify the pipeline runs correctly before analyzing real biological data, and they provide known-truth benchmarks for diagnostic evaluation.",
+      "nodeIds": [
+        "file:data/mock_counts.csv",
+        "file:data/convergence_test_counts.csv"
+      ]
+    },
+    {
+      "order": 12,
+      "title": "Data Generation Utility",
+      "description": "scripts/generate_mock_counts.jl produces synthetic EFDM donor-level count data with controlled parameters. It samples from the true EFDM generative process (simulating regression coefficients and Dirichlet-Multinomial draws), giving users the ability to create test datasets of arbitrary size and structure. This script closes the loop — you can generate data with known ground truth, run the pipeline, and verify that the MCMC posterior recovers the original parameters.",
+      "nodeIds": [
+        "file:scripts/generate_mock_counts.jl"
+      ]
+    }
+  ]
+}

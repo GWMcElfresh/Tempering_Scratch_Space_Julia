@@ -25,7 +25,7 @@ Save a PlotlyJS figure to HTML, or print a message if PlotlyJS is unavailable.
 """
 function _maybe_plotly(fig, filepath::String)
     if _HAS_PLOTLY
-        savehtml(fig, filepath)
+        PlotlyJS.savefig(fig, filepath)
         @info "Saved plot: $filepath"
     else
         csv_path = splitext(filepath)[1] * "_data.csv"
@@ -65,7 +65,7 @@ function plot_aplus_posterior(pt, D::Int, K::Int;
                                    name="aplus",
                                    marker_color="steelblue",
                                    opacity=0.75)
-        vline = PlotlyJS.shape(;
+        vline = PlotlyJS.attr(;
             type="line", x0=aplus_mean, y0=0,
             x1=aplus_mean, y1=1, yref="paper",
             line=PlotlyJS.attr(color="red", width=2, dash="dash")
@@ -191,7 +191,10 @@ function plot_conditional_effects(pt, D::Int, K::Int,
                 xaxis_title=cov_name,
                 yaxis_title="Expected proportion"
             )
-            fig = PlotlyJS.plot(cov_traces, layout)
+            fig = PlotlyJS.plot(layout)
+            for tr in cov_traces
+                PlotlyJS.addtraces!(fig, tr)
+            end
             _maybe_plotly(fig, joinpath(output_dir, "effect_$(cov_name).html"))
         end
     end
@@ -207,19 +210,20 @@ Ordered bar chart of Rhat values with a reference line at 1.05.
 Writes CSV data in all cases, and an interactive HTML if PlotlyJS is available.
 """
 function plot_rhat_summary(pt; output_dir::String=".", filename::String="rhat_summary.html")
-    chain_obj = Chains(pt)
-    rhat_vals = rhat(chain_obj)
+    # Use within-chain Rhat on the fixed-leg cold chain.
+    # Standard rhat(Chains(pt)) with extended_traces=true includes hot chains
+    # at different temperatures, which inflates Rhat artifactually.
+    tci = extract_target_chain_indices(pt)
+    cold_idx = first(tci)
+    samples = sample_array(pt)
+    model_n_params = size(samples, 2)
+    rhat_vec = Float64[within_chain_rhat(samples[:, p, cold_idx]) for p in 1:model_n_params]
 
-    rhat_vec = if rhat_vals isa DataFrame
-        Float64[skipmissing(rhat_vals.nt.rhat)...]
-    else
-        Float64[skipmissing(rhat_vals)...]
-    end
-
-    param_names = if rhat_vals isa DataFrame
-        [string(n) for n in rhat_vals.nt.parameters]
-    else
-        ["Param_$i" for i in 1:length(rhat_vec)]
+    # Try to get parameter names from Pigeons
+    param_names = try
+        [string(n) for n in sample_names(pt)]
+    catch
+        ["Param_$i" for i in 1:model_n_params]
     end
 
     # Sort by Rhat value
@@ -239,7 +243,7 @@ function plot_rhat_summary(pt; output_dir::String=".", filename::String="rhat_su
             marker_color=colors,
             name="Rhat"
         )
-        hline = PlotlyJS.shape(;
+        hline = PlotlyJS.attr(;
             type="line", x0=-0.5, y0=1.05,
             x1=length(rhat_sorted) - 0.5, y1=1.05,
             line=PlotlyJS.attr(color="red", width=2, dash="dash"),
@@ -415,6 +419,17 @@ function plot_covariance_heatmap(cov_matrix::Matrix{Float64},
         sorted_cov = cov_matrix[order, order]
 
         max_abs = maximum(abs.(sorted_cov))
+
+        # Dynamic decimal places: show at least 2 significant digits.
+        # For tiny values like the mu covariance (~10^-4), digits=3 rounds
+        # everything to 0.000 and makes the annotation useless.
+        min_abs = minimum(abs(x) for x in sorted_cov if !iszero(x))
+        n_digits = if min_abs > 0
+            max(2, abs(Int(floor(log10(min_abs)))) + 2)
+        else
+            3
+        end
+
         heat = PlotlyJS.heatmap(;
             z=sorted_cov,
             x=sorted_labels,
@@ -423,7 +438,7 @@ function plot_covariance_heatmap(cov_matrix::Matrix{Float64},
             zmid=0.0,
             zmin=-max_abs,
             zmax=max_abs,
-            text=round.(sorted_cov, digits=3),
+            text=round.(sorted_cov, digits=n_digits),
             texttemplate="%{text}",
             textfont_size=9,
         )
@@ -476,7 +491,7 @@ function plot_shrinkage_barchart(shr; D::Int, K::Int,
     if _HAS_PLOTLY
         w_df = df[df.block .== "w", :]
         p_df = df[df.block .== "p", :]
-        other_df = df[df.block .== "aplus" .| df.block .== "beta", :]
+        other_df = df[(df.block .== "aplus") .| (df.block .== "beta"), :]
 
         traces = PlotlyJS.GenericTrace[]
 
@@ -504,15 +519,18 @@ function plot_shrinkage_barchart(shr; D::Int, K::Int,
             yaxis=PlotlyJS.attr(range=[0, 1.05]),
             barmode="group",
             shapes=[
-                PlotlyJS.shape(; type="line", x0=-0.5, y0=0.3,
+                PlotlyJS.attr(; type="line", x0=-0.5, y0=0.3,
                     x1=length(df.parameter) - 0.5, y1=0.3,
                     line=PlotlyJS.attr(color="red", width=1, dash="dot"), yref="y"),
-                PlotlyJS.shape(; type="line", x0=-0.5, y0=0.99,
+                PlotlyJS.attr(; type="line", x0=-0.5, y0=0.99,
                     x1=length(df.parameter) - 0.5, y1=0.99,
                     line=PlotlyJS.attr(color="purple", width=1, dash="dot"), yref="y"),
             ],
         )
-        fig = PlotlyJS.plot(traces, layout)
+        fig = PlotlyJS.plot(layout)
+        for tr in traces
+            PlotlyJS.addtraces!(fig, tr)
+        end
         _maybe_plotly(fig, joinpath(output_dir, filename))
     end
 

@@ -1,0 +1,58 @@
+# Convergence test config — plain PT with 30 chains.
+#
+# Uses corrected EFDM data (N=200, signal_scale=2.0). With Λ ≈ 8, the 2Λ
+# rule recommends ~16 chains for good swap acceptance. We use 30 chains
+# for a generous safety margin.
+#
+# Based on Pigeons.jl documentation:
+# - n_chains ≈ 2Λ ensures min swap acceptance > 0.2
+# - With 30 chains and Λ ≈ 8, min α ≈ 1/(1+exp(8/29)) ≈ 0.43
+# - SliceSampler for robust, gradient-free exploration
+# - Within-chain Rhat (4-segment split) correct diagnostic for PT
+#
+# Run:
+#   julia scripts/generate_mock_counts.jl data/convergence_test_counts.csv 200 20260602 3 2.0
+#   julia scripts/run_efdm.jl config/convergence_test_config.toml
+#
+# EXPECTED: Rhat < 1.05 for all parameters, ESS > 400, rst ≥ 10
+
+[data]
+path = "data/convergence_test_counts.csv"
+response_columns = ["CT0", "CT1", "CT2"]
+covariate_columns = ["treatment", "age"]
+subject_column = "donor_id"
+merge_rare_types = false
+merge_threshold = 0.015
+
+[priors.beta]
+# True β values ~±0.4–1.0 for signal_scale=2.0. Prior sd=0.5 is moderate.
+sd = 0.5
+
+[priors.aplus]
+log_mean = 3.5
+log_sd = 1.0
+
+[priors.p]
+sd = 1.5
+
+[priors.w]
+sd = 1.5
+
+[sampler]
+# 30 chains, 12 rounds = 4096 scans per chain. 30 chains ensures good
+# swap acceptance while 12 rounds gives enough per-chain iterations for
+# the SliceSampler to mix within the cold chain.
+n_chains = 30
+n_rounds = 12
+explorer = "SliceSampler"
+use_variational = false
+multithreaded = false
+
+[output]
+dir = "efdm_output_convergence_test"
+
+[auto_tune]
+enabled = false
+n_iter = 2
+inflation = 1.5
+covariance_plots = true

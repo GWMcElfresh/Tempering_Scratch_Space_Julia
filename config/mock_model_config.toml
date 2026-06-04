@@ -1,11 +1,20 @@
-# Quick local smoke-test config using generated mock data.
+# Convergence test config using generated mock data.
+#
+# With the default 80-donor mock dataset (N=80) and these sampler settings,
+# a well-tuned EFDM run should produce:
+#   Λ_var ≤ 3, rst ≥ 10, Rhat < 1.05  →  CONVERGED
+#
+# Run:  julia scripts/generate_mock_counts.jl    # generates data/mock_counts.csv (80 donors)
+#       julia scripts/run_efdm.jl config/mock_model_config.toml
 
 [data]
 path = "data/mock_counts.csv"
 response_columns = ["CT0", "CT1", "CT2", "CT3", "CT4", "CT5"]
 covariate_columns = ["treatment", "age"]
 subject_column = "donor_id"
-merge_rare_types = true
+# Disabled: all 6 categories (CT0–CT5) are intentionally generated with
+# proportions well above 1.5%. Enabling merge would silently reduce D.
+merge_rare_types = false
 merge_threshold = 0.015
 
 [priors.beta]
@@ -22,12 +31,16 @@ sd = 2.0
 sd = 2.0
 
 [sampler]
-n_chains = 12
-n_rounds = 6
+# 40 chains with 8 rounds reliably produces rst ≥ 10 with the 80-donor
+# mock dataset. Lessons learned: the variational bridge handles the
+# prior-posterior gap, but needs enough chains for the temperature ladder
+# to have fine enough rungs.
+n_chains = 40
+n_rounds = 8
 explorer = "SliceSampler"
 use_variational = true
 first_tuning_round = 3
-n_chains_variational = 4
+n_chains_variational = 14
 multithreaded = false
 
 [output]

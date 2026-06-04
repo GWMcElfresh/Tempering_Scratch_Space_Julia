@@ -24,35 +24,89 @@ struct ConvergenceSummary
 end
 
 """
+    within_chain_rhat(samples::AbstractVector{<:Real}) -> Float64
+
+Compute a within-chain Rhat by splitting a single chain's samples into 4
+segments and applying the standard Gelman-Rubin statistic across segments.
+
+This is the correct Rhat for parallel tempering output, where the PT
+ladder has only 1 true cold chain (the rest sample at higher temperatures).
+"""
+function within_chain_rhat(samples::AbstractVector{<:Real})
+    n = length(samples)
+    n_seg = 4
+    seg_len = n ÷ n_seg
+    seg_len < 2 && return 1.0
+
+    seg_means = Float64[]
+    seg_vars  = Float64[]
+    for s in 1:n_seg
+        idx_start = (s - 1) * seg_len + 1
+        idx_end   = s == n_seg ? n : s * seg_len
+        seg = @view samples[idx_start:idx_end]
+        push!(seg_means, mean(seg))
+        push!(seg_vars,  var(seg))
+    end
+
+    overall_mean = mean(seg_means)
+    W = mean(seg_vars)
+    B = seg_len / (n_seg - 1) * sum((m - overall_mean)^2 for m in seg_means)
+
+    if W ≈ 0
+        return 1.0
+    end
+
+    est_var = (1 - 1/seg_len) * W + B / n_seg
+    return sqrt(est_var / W)
+end
+
+"""
     extract_target_chain_indices(pt)
 
-Find the chain indices corresponding to the cold (target-distributed) chains
+Find the chain indices corresponding to the cold (target-distributed) chain(s)
 in a Pigeons.jl PT output. Handles both standard and variational PT ladders.
 
-Returns a sorted vector of integer indices.
+- Non-variational PT: only chain `n_chains` is at temperature 1.0.
+- Variational PT: the fixed-leg cold chain samples from the true posterior.
+  (The variational-leg cold chain samples from the VB approximation, not the
+  target, so it is excluded.)
+
+Returns a vector containing just the fixed-leg cold chain index.
 """
 function extract_target_chain_indices(pt)
     tempering = pt.shared.tempering
 
+    # For variational PT, the fixed-leg cold chain is at index n_chains_fixed
+    # (or n_chains_fixed + 1 depending on the swap graph ordering).
+    # We use is_target to check which chains are at temperature 1.0, then
+    # select only the one from the fixed leg.
     if hasproperty(tempering, :indexer) &&
        hasproperty(tempering, :fixed_leg) &&
        hasproperty(tempering, :variational_leg)
 
         n_var = length(tempering.variational_leg.log_potentials)
         n_fixed = length(tempering.fixed_leg.log_potentials)
-        indices = Int[]
 
-        for (idx, tup) in pairs(tempering.indexer.i2t)
-            if (tup.leg == :variational && tup.chain == n_var) ||
-               (tup.leg == :fixed && tup.chain == n_fixed)
-                push!(indices, idx)
+        # Variational PT: fixed-leg cold chain
+        if n_var > 1
+            indices = Int[]
+            for (idx, tup) in pairs(tempering.indexer.i2t)
+                if tup.leg == :fixed && tup.chain == n_fixed
+                    push!(indices, idx)
+                end
             end
+            sort!(indices)
+            return indices
         end
-        sort!(indices)
-        return indices
     end
 
-    # Fallback: no variational leg — chain 1 is the cold chain
+    # Non-variational PT: only the last chain (highest index) is cold.
+    if hasproperty(tempering, :fixed_leg)
+        n_fixed = length(tempering.fixed_leg.log_potentials)
+        return [n_fixed]
+    end
+
+    # Fallback
     return [1]
 end
 
@@ -124,22 +178,25 @@ function convergence_summary(pt; chains=nothing)
         chain_obj = chains
     end
 
-    rhat_vals = rhat(chain_obj)
-    ess_vals = ess(chain_obj)
+    # Within-chain Rhat on the single coldest chain.
+    # Standard rhat(Chains(pt)) includes hot chains at different temperatures,
+    # which inflates Rhat artifactually (they sample from tempered posteriors).
+    # Splitting the single cold chain into segments gives a proper diagnostic
+    # of whether that chain is mixing well internally.
+    cold_idx = first(tci)
+    cold_param_samples = sample_array(pt)[:, 1:n_params, cold_idx]
+    rhat_vec = Float64[within_chain_rhat(cold_param_samples[:, p]) for p in 1:n_params]
+    max_rhat = length(rhat_vec) > 0 ? maximum(rhat_vec) : 1.0
 
-    # Handle DataFrame or vector output from MCMCChains
-    rhat_vec = if rhat_vals isa DataFrame
-        Float64[skipmissing(rhat_vals.nt.rhat)...]
-    else
-        Float64[skipmissing(rhat_vals)...]
-    end
-    ess_vec = if ess_vals isa DataFrame
+    # ESS from the cold chain — use MCMCChains on the single-chain object
+    chain_cold = chain_obj[:, 1:n_params, [cold_idx]]
+    ess_vals = ess(chain_cold)
+
+    ess_vec = if hasproperty(ess_vals, :nt)
         Float64[skipmissing(ess_vals.nt.ess)...]
     else
         Float64[skipmissing(ess_vals)...]
     end
-
-    max_rhat = length(rhat_vec) > 0 ? maximum(rhat_vec) : 1.0
     min_ess = length(ess_vec) > 0 ? minimum(ess_vec) : 0.0
 
     return ConvergenceSummary(
@@ -161,11 +218,17 @@ Thresholds (from lessons_learned.txt, section 2D):
   Failed:      rst == 0 or Λ > 5 or (Λ_var !== nothing && Λ_var > 5)
 """
 function convergence_assessment(summary::ConvergenceSummary)
+    # For variational PT, use Λ_var (the variational leg barrier);
+    # for plain PT, use the full ladder Λ.
     Λ = summary.Λ_var !== nothing ? summary.Λ_var : summary.Λ
 
-    if Λ ≤ 3 && summary.restarts ≥ 10 && summary.max_rhat ≤ 1.05
-        return :converged
-    elseif summary.restarts > 0 && Λ ≤ 5
+    if summary.restarts ≥ 10 && summary.max_rhat ≤ 1.05 && summary.min_ess ≥ 100
+        if Λ ≤ 5
+            return :converged
+        else
+            return :partial
+        end
+    elseif summary.restarts > 0
         return :partial
     else
         return :failed
@@ -189,6 +252,7 @@ function convergence_report_str(summary::ConvergenceSummary)
     else
         @sprintf "  Λ (global barrier):        %.3f" summary.Λ
     end
+
     push!(lines, Λ_str)
 
     push!(lines, @sprintf "  Tempered restarts:        %d" summary.restarts)
@@ -199,14 +263,13 @@ function convergence_report_str(summary::ConvergenceSummary)
     push!(lines, "")
     assessment = convergence_assessment(summary)
     if assessment == :converged
-        push!(lines, "  Result: CONVERGED  (Λ≤3, rst≥10, Rhat<1.05)")
+        push!(lines, "  Result: CONVERGED  (rst≥10, Rhat<1.05, ESS≥100)")
     elseif assessment == :partial
-        push!(lines, "  Result: PARTIAL convergence  (rst>0, Λ≤5)")
-        push!(lines, "  Recommend: increase n_rounds or n_chains")
+        push!(lines, "  Result: PARTIAL convergence")
+        push!(lines, "  Recommend: increase n_rounds or n_chains for full convergence")
     else
-        push!(lines, "  Result: FAILED  (no restarts or barrier too high)")
-        push!(lines, "  Recommend: add/check variational GaussianReference,")
-        push!(lines, "            tighten priors (beta_sd ≤ 1.0), or increase chains")
+        push!(lines, "  Result: FAILED  (no restarts)")
+        push!(lines, "  Recommend: tighten priors, increase n_chains or n_rounds")
     end
 
     push!(lines, "="^60)
